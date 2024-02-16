@@ -1,4 +1,4 @@
-# pixelprowess
+# PixelProwess
 
 A new Flutter project.
 
