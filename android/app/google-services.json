@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "785469951781",
+    "project_id": "pixelprowess69",
+    "storage_bucket": "pixelprowess69.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:785469951781:android:6308e24ac1dbf4b0d0d4cc",
+        "android_client_info": {
+          "package_name": "com.example.pixelprowess"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCvajcaDi-GDoZU4O8MyBsLeK0Ay56VKqw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
