@@ -233,7 +233,7 @@ class _Upload_PageState extends State<Upload_Page> {
       'Uploaded UID': user!.uid,
       'Views':0
     });
-    await _firestore.collection('Global VIDs').doc(user.uid).set({
+    await _firestore.collection('Global VIDs').doc('VIDs').set({
       'VID': FieldValue.arrayUnion([combination]),
     }, SetOptions(merge: true));
     await _firestore.collection('User Uploaded Videos ID').doc(user.uid).set({
@@ -255,7 +255,7 @@ class _Upload_PageState extends State<Upload_Page> {
   }
 
   TextEditingController _title = TextEditingController();
-
+  bool _startedposting=false;
   @override
   Widget build(BuildContext context) {
     final user = _auth.currentUser;
@@ -264,9 +264,12 @@ class _Upload_PageState extends State<Upload_Page> {
       backgroundColor: Colors.black,
       appBar: AppBar(
         actions: [
-          TextButton(
+          _startedposting?Container():TextButton(
               onPressed: () async {
               if(_mediaFile!=null &&_image!=null &&_title.text!=null){
+                setState(() {
+                  _startedposting=true;
+                });
                 await generateUniqueRandomNumber();
                 Center(
                   child: CircularProgressIndicator(
@@ -482,6 +485,7 @@ class _Upload_PageState extends State<Upload_Page> {
             TextField(
                 style: TextStyle(color: Colors.white),
                 controller: _title,
+                maxLength: 15,
                 decoration: InputDecoration(
                     labelText: 'Title',
                     labelStyle:
