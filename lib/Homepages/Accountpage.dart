@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:pixelprowess/Pages/test_video_if.dart';
+import 'package:pixelprowess/Pages/upload_page.dart';
 import 'package:pixelprowess/Video%20Card/uservideo(Sample).dart';
 import 'package:pixelprowess/main.dart';
 import 'package:timeago/timeago.dart'as timeago;
@@ -176,132 +177,98 @@ class _AccountpageState extends State<Accountpage> {
 
   }
   List<String> subscriber=[];
-  List<String> videos=['https://player.vimeo.com/progressive_redirect/playback/830415808/rendition/360p/file.mp4?loc=external&oauth2_token_id=57447761&signature=814150c4b842b78067aa1808a879bee2cbd5c96640853ee20e96a441ca1a0dc8',
-  'https://media.istockphoto.com/id/1328671157/video/sydney-suburban-wildlife-on-cooks-river-canterbury-campsie-dulwich-hill-marrickville-ashbury.mp4?s=mp4-640x640-is&k=20&c=uNRCeA9axM4ntvdv1Rq1lWVzg8jW-F01ofv0RGXqDKQ='
-  ];
-  List<String>captions=["World's Costliest Ferrari",'Nature Beauty'];
-  List<String> thumbnail=['https://images.pexels.com/photos/3954429/pexels-photo-3954429.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
-    'https://images.pexels.com/photos/6706375/pexels-photo-6706375.jpeg?auto=compress&cs=tinysrgb&w=600'];
-  List<int> views=[100,200];
-  List<DateTime> uploaddate=[DateTime(2024,4,7),DateTime(2024,8,7)];
-  Future<void> fetchdate() async {
+  List<String> videos=[];
+  List<String>captions=[];
+  List<String> thumbnail=[];
+
+  List<DateTime> uploaddate=[];
+  List<String>videoid=[];
+  Future<void> fetchvideoid() async {
     final user = _auth.currentUser;
     try {
       DocumentSnapshot documentSnapshot = await _firestore
-          .collection('User Video')
+          .collection('User Uploaded Videos ID')
           .doc(user?.uid)
           .get();
 
       if (documentSnapshot.exists) {
         dynamic data = documentSnapshot.data();
         if (data != null) {
-          List<dynamic> posts = (data['Videos'] as List?) ?? [];
+          List<dynamic> posts = (data['VID'] as List?) ?? [];
           setState(() {
-            uploaddate =posts.map((post) => (post['Upload Date'] as Timestamp).toDate()).toList();
+            videoid =posts.map((post) => post.toString()).toList();
           });
         }
       }
-      print('video $videos');
+      print('vids $videoid');
     } catch (e) {
       print('Error fetching followers videos: $e');
     }
 
   }
-  Future<void> fetchviews() async {
-    final user = _auth.currentUser;
-    try {
-      DocumentSnapshot documentSnapshot = await _firestore
-          .collection('User Video')
-          .doc(user?.uid)
-          .get();
-
-      if (documentSnapshot.exists) {
-        dynamic data = documentSnapshot.data();
-        if (data != null) {
-          List<dynamic> posts = (data['Videos'] as List?) ?? [];
-          setState(() {
-            views =posts.map((post) => int.parse(post['Views'].toString())).toList();
-          });
-        }
-      }
-      print('video $videos');
-    } catch (e) {
-      print('Error fetching followers videos: $e');
-    }
-
-  }
+  String thumbnails='';
   Future<void> fetchthumbnail() async {
     final user = _auth.currentUser;
-    try {
-      DocumentSnapshot documentSnapshot = await _firestore
-          .collection('User Video')
-          .doc(user?.uid)
-          .get();
-
-      if (documentSnapshot.exists) {
-        dynamic data = documentSnapshot.data();
-        if (data != null) {
-          List<dynamic> posts = (data['Videos'] as List?) ?? [];
-          setState(() {
-            thumbnail =
-                posts.map((post) => post['thumbnail'].toString()).toList();
-          });
-        }
+    await fetchvideoid();
+    for(String vids in videoid){
+      final docsnap=await _firestore.collection('Global Post').doc(vids).get();
+      if(docsnap.exists){
+        setState(() {
+          thumbnails=docsnap.data()?['Thumbnail Link'];
+          thumbnail.add(thumbnails);
+        });
       }
-      print('video $videos');
-    } catch (e) {
-      print('Error fetching followers videos: $e');
     }
-
+    print(' thumbnail $thumbnail');
   }
+  String Caption='';
   Future<void> fetchcaptions() async {
     final user = _auth.currentUser;
-    try {
-      DocumentSnapshot documentSnapshot = await _firestore
-          .collection('User Video')
-          .doc(user?.uid)
-          .get();
-
-      if (documentSnapshot.exists) {
-        dynamic data = documentSnapshot.data();
-        if (data != null) {
-          List<dynamic> posts = (data['Videos'] as List?) ?? [];
-          setState(() {
-            captions =
-                posts.map((post) => post['captions'].toString()).toList();
-          });
-        }
+    await fetchvideoid();
+    for(String vids in videoid){
+      final docsnap=await _firestore.collection('Global Post').doc(vids).get();
+      if(docsnap.exists){
+        setState(() {
+          Caption=docsnap.data()?['Caption'];
+          captions.add(Caption);
+        });
       }
-      print('video $videos');
-    } catch (e) {
-      print('Error fetching followers videos: $e');
     }
-
+    print(' captions $captions');
   }
   List<Duration> videoLengths = [];
+  String Videolinks='';
   Future<void> fetchvideo() async {
-    final user = _auth.currentUser;
-    try {
-      DocumentSnapshot documentSnapshot = await _firestore
-          .collection('User Video')
-          .doc(user?.uid)
-          .get();
-
-      if (documentSnapshot.exists) {
-        dynamic data = documentSnapshot.data();
-        if (data != null) {
-          List<dynamic> posts = (data['Videos'] as List?) ?? [];
-          setState(() {
-            videos = posts.map((post) => post['videourl'].toString()).toList();
-          });
-          // Fetch video lengths
-        }
+    await fetchvideoid();
+    for(String vids in videoid){
+      final docsnap=await _firestore.collection('Global Post').doc(vids).get();
+      if(docsnap.exists){
+        setState(() {
+          Videolinks=docsnap.data()?['Video Link'];
+          videos.add(Videolinks);
+        });
       }
-      print('video $videos');
-    } catch (e) {
-      print('Error fetching followers videos: $e');
     }
+    print(' videos $videos');
   }
+  DateTime Uploaddate = DateTime.now();
+  Future<void> fetchuploaddate() async {
+    await fetchvideoid();
+    for (String vids in videoid) {
+      final docsnap =
+      await _firestore.collection('Global Post').doc(vids).get();
+      if (docsnap.exists) {
+        final timestamp = docsnap.data()?['Uploaded At'] as Timestamp;
+        final uploadDateTime = timestamp.toDate(); // Convert Firestore Timestamp to DateTime
+        setState(() {
+          Uploaddate = uploadDateTime;
+          uploaddate.add(Uploaddate);
+        });
+      }
+    }
+    print(' upload date $uploaddate');
+  }
+
   String userbio='No bio';
   Future<void> fetchbio()async{
     final user=_auth.currentUser;
@@ -321,14 +288,30 @@ class _AccountpageState extends State<Accountpage> {
       fetchData();
     });
   }
-
+  int fetchedviews=0;
+  List<int> views=[];
+  Future<void> fetchviews() async{
+    await fetchvideoid();
+    for (String vids in videoid) {
+      final docsnap =
+      await _firestore.collection('Global Post').doc(vids).get();
+      if (docsnap.exists) {
+        final fetchviews = docsnap.data()?['Views'];
+        setState(() {
+          fetchedviews = fetchviews;
+          views.add(fetchedviews);
+        });
+      }
+    }
+    print(' Views got $views');
+  }
   Future<void> fetchData() async {
     await fetchusername();
     await fetchprofilepic();
     await fetchcoverpic();
     await fetchbio();
-    await fetchdate();
   }
+  int views_video=0;
   @override
   void initState() {
     // TODO: implement initState
@@ -336,12 +319,18 @@ class _AccountpageState extends State<Accountpage> {
     fetchusername();
     fetchVideoLengths();
     fetchprofilepic();
+    fetchthumbnail();
     fetchcoverpic();
+    fetchuploaddate();
     fetchsubscriber();
+    fetchcaptions();
     fetchvideo();
     fetchbio();
+    fetchvideoid();
+    fetchviews();
     fetchUserDataPeriodically();
   }
+  TextEditingController _captionController=TextEditingController();
   @override
   Widget build(BuildContext context) {
     final user=_auth.currentUser;
@@ -352,6 +341,9 @@ class _AccountpageState extends State<Accountpage> {
         backgroundColor: Colors.black,
         elevation: 0,
         actions: [
+          IconButton(onPressed: (){
+            Navigator.push(context, MaterialPageRoute(builder: (context) => Upload_Page(),));
+          }, icon: Icon(Icons.add_box_outlined,color: Colors.white,)),
           IconButton(onPressed: (){
             _auth.signOut();
             Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomePage(),));
@@ -434,19 +426,19 @@ class _AccountpageState extends State<Accountpage> {
                         SizedBox(
                           width: 10,
                         ),
-                        if(videos.length==0)
+                        if(thumbnail.length==0)
                             Text(
                               ' 0 Video',
                               style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w400, fontSize: 12),
                             ),
-                        if(videos.length==1)
+                        if(thumbnail.length==1)
                           Text(
                             ' 1 Video',
                             style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w400, fontSize: 12),
                           ),
-                        if(videos.length>1)
+                        if(thumbnail.length>1)
                           Text(
-                            ' ${videos.length} Videos',
+                            ' ${thumbnail.length} Videos',
                             style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w400, fontSize: 12),
                           ),
                       ],
@@ -527,29 +519,40 @@ class _AccountpageState extends State<Accountpage> {
             SizedBox(
               height: 50,
             ),
-            for(int i=0;i<captions.length;i++)
+            for(int i=0;i<thumbnail.length;i++)
               Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
                     children: [
                       SizedBox(width: 20),
                       Stack(
                         children: [
                           InkWell(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => User_video(
-                                    thumbnail: thumbnail[i],
-                                    views: views[i],
-                                    caption: captions[i],
-                                    viddeourl: videos[i],
-                                    uploaddate: uploaddate[i],
-                                    Index: i,
-                                  ),
-                                ),
-                              );
+                            onTap: ()async{
+                              final docsnap=await _firestore.collection('Global Post').doc(videoid[i]).get();
+                              if(docsnap.exists){
+                                views_video=docsnap.data()?['Views'];
+                              }
+                              await _firestore.collection('Global Post').doc(videoid[i]).update(
+                                  {
+                                    'Views':views_video+1
+                                  });
+                              // Navigator.push(
+                              //   context,
+                              //   MaterialPageRoute(
+                              //     builder: (context) => User_video(
+                              //       thumbnail: thumbnail[i],
+                              //       views: views[i],
+                              //       caption: captions[i],
+                              //       viddeourl: videos[i],
+                              //       uploaddate: uploaddate[i],
+                              //       Index: i,
+                              //     ),
+                              //   ),
+                              // );
                               print('index $i');
                             },
                             child: Image.network(
@@ -558,37 +561,45 @@ class _AccountpageState extends State<Accountpage> {
                               width: 150,
                             ),
                           ),
-                          Positioned(
-                            bottom: 5,
-                            right: 5,
-                            child: Text(
-                              '${videoLengths[i].toString().split('.').first}',
-                              // Converts Duration to string and removes milliseconds
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
+                          // Positioned(
+                          //   bottom: 5,
+                          //   right: 5,
+                          //   child: Text(
+                          //     '${videoLengths[i].toString().split('.').first}',
+                          //     // Converts Duration to string and removes milliseconds
+                          //     style: TextStyle(
+                          //       color: Colors.white,
+                          //       fontSize: 12,
+                          //       fontWeight: FontWeight.bold,
+                          //     ),
+                          //   ),
+                          // ),
                         ],
                       ),
                       SizedBox(width: 20),
                       InkWell(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => User_video(
-                                thumbnail: thumbnail[i],
-                                views: views[i],
-                                caption: captions[i],
-                                viddeourl: videos[i],
-                                uploaddate: uploaddate[i],
-                                Index: i,
-                              ),
-                            ),
-                          );
+                        onTap: ()async{
+                          final docsnap=await _firestore.collection('Global Post').doc(videoid[i]).get();
+                          if(docsnap.exists){
+                            views_video=docsnap.data()?['Views'];
+                          }
+                          await _firestore.collection('Global Post').doc(videoid[i]).update(
+                              {
+                                'Views':views_video+1
+                              });
+                          // Navigator.push(
+                          //   context,
+                          //   MaterialPageRoute(
+                          //     builder: (context) => User_video(
+                          //       thumbnail: thumbnail[i],
+                          //       views: views[i],
+                          //       caption: captions[i],
+                          //       viddeourl: videos[i],
+                          //       uploaddate: uploaddate[i],
+                          //       Index: i,
+                          //     ),
+                          //   ),
+                          // );
                           print('Index $i');
                         },
                         child: Column(
@@ -615,10 +626,12 @@ class _AccountpageState extends State<Accountpage> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
+                                if (views[i] == 0)
+                                  Text('No Views', style: TextStyle(color: Colors.grey)),
                                 if (views[i] == 1)
-                                  Text('${views[i]} view', style: TextStyle(color: Colors.grey)),
+                                  Text('${views[i]} View', style: TextStyle(color: Colors.grey)),
                                 if (views[i] > 1)
-                                  Text('${views[i]} views', style: TextStyle(color: Colors.grey)),
+                                  Text('${views[i]} Views', style: TextStyle(color: Colors.grey)),
                                 SizedBox(width: 10),
                                 Text(
                                   timeago.format(uploaddate[i], locale: 'en_short', allowFromNow: true), // Format the upload date
@@ -626,9 +639,113 @@ class _AccountpageState extends State<Accountpage> {
                                 ),
                               ],
                             ),
+                            SizedBox(
+                              height: 5,
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                TextButton(onPressed: ()async{
+                                  showDialog(context: context, builder: (context) {
+                                    return AlertDialog(
+                                      backgroundColor: Colors.black,
+                                      title: Column(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        crossAxisAlignment: CrossAxisAlignment.center,
+                                        children: [
+                                          Center(
+                                            child: Text('Are you sure?\n'
+                                                'Video once deleted can never be recovered.',style:TextStyle(color: Colors.white,
+                                            fontWeight: FontWeight.bold,fontSize: 15
+                                            ),),
+                                          ),
+                                        ],
+                                      ),
+                                      actions: [
+                                        Center(
+                                          child: Row(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            crossAxisAlignment: CrossAxisAlignment.center,
+                                            children: [
+                                              TextButton(onPressed: ()async{
+                                                await _firestore.collection('Global Post').doc(videoid[i]).delete();
+                                              }, child: Text('Delete',style: TextStyle(
+                                                color: Colors.red,
+                                                fontWeight: FontWeight.bold
+                                              ),)),
+                                              TextButton(onPressed: ()async{
+                                                Navigator.pop(context);
+                                              }, child: Text('Cancel',style: TextStyle(
+                                                  color: Colors.green,
+                                                fontWeight: FontWeight.bold
+                                              ),))
+                                            ],
+                                          ),
+                                        )
+                                      ],
+                                    );
+                                  },);
+                                }, child: Text('Delete',style: TextStyle(color: Colors.red),)),
+                                Center(
+                                    child: TextButton(onPressed: ()async{
+                                      showDialog(context: context, builder: (context) {
+                                        return AlertDialog(
+                                          backgroundColor: Colors.black,
+                                          title:Center(
+                                            child: Text('Edit Caption',style: TextStyle(color: Colors.white,fontWeight: FontWeight.w300,
+                                            fontSize: 15),),
+                                          ),
+                                          actions: [
+                                            Column(
+                                              children: [
+
+                                                TextField(
+                                                  style: TextStyle(color: Colors.white),
+                                                  controller: _captionController,
+                                                  maxLength: 15,
+
+                                                ),
+                                                SizedBox(
+                                                  height: 10,
+                                                ),
+                                                Row(
+                                                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                                  children: [
+
+                                                    ElevatedButton(onPressed: (){
+                                                      Navigator.pop(context);
+                                                    },
+                                                        child: Text('Cancel',style: TextStyle(color: Colors.white),),
+                                                    style: ButtonStyle(backgroundColor: MaterialStatePropertyAll(Colors.red)),
+                                                    ),
+                                                    SizedBox(
+                                                      width:10 ,
+                                                    ),
+                                                    ElevatedButton(onPressed: ()async{
+                                                      if(_captionController.text.isNotEmpty){
+                                                        await _firestore.collection('Global Post').doc(videoid[i]).update(
+                                                            {
+                                                              'Caption':_captionController.text
+                                                            });
+                                                        Navigator.pop(context);
+                                                      }
+                                                    }, child: Text('Make Changes',style: TextStyle(color: Colors.black),),
+                                                    style: ButtonStyle(backgroundColor: MaterialStatePropertyAll(Colors.green)),
+                                                    ),
+                                                  ],
+                                                )
+                                              ],
+                                            ),
+                                          ],
+                                        );
+                                      },);
+                                      print('Clicked ${videoid[i]}');
+                                    }, child: Text('Edit',style: TextStyle(color: Colors.white),),)),
+                              ],
+                            )
                           ],
                         ),
-                      )
+                      ),
                     ],
                   ),
 
@@ -637,8 +754,8 @@ class _AccountpageState extends State<Accountpage> {
                   ),
                 ],
               ),
-          ],
-        ),
+
+        ]),
       ),
     );
   }

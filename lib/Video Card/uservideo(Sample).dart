@@ -30,6 +30,7 @@ class User_video extends StatefulWidget {
 
 class _User_videoState extends State<User_video> {
   late VideoPlayerController _controller;
+  late ValueNotifier<Duration> _currentPositionNotifier;
   bool _showControls = true;
   bool _isFullscreen = false;
   String username='';
@@ -207,6 +208,16 @@ class _User_videoState extends State<User_video> {
       // Start autoplay
       _controller.play();
     });
+    _currentPositionNotifier = ValueNotifier(Duration.zero);
+    _controller.addListener(() {
+      final position = _controller.value.position;
+      _currentPositionNotifier.value = position;
+      setState(() {
+        _sliderValue = position.inSeconds.toDouble();
+        _duration = _controller.value.duration;
+      });
+    });
+
   }
 
   @override
@@ -317,15 +328,13 @@ class _User_videoState extends State<User_video> {
                           ),
                         ),
                         Slider(
-                          value: _sliderValue,
+                          value: _currentPositionNotifier.value.inSeconds.toDouble(),
                           min: 0,
-                          max: _duration.inSeconds.toDouble(),
+                          max: _controller.value.duration.inSeconds.toDouble(),
                           onChanged: (newValue) {
-                            setState(() {
-                              _sliderValue = newValue;
-                            });
-                            // Seek to the new position in the video
-                            _controller.seekTo(Duration(seconds: newValue.toInt()));
+                            final newDuration = Duration(seconds: newValue.toInt());
+                            _currentPositionNotifier.value = newDuration;
+                            _controller.seekTo(newDuration);
                           },
                         ),
                       ],
@@ -512,5 +521,6 @@ class _User_videoState extends State<User_video> {
     super.dispose();
     _controller.dispose();
     _controller.pause();
+    _currentPositionNotifier.dispose();
   }
 }
