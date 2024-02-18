@@ -122,6 +122,58 @@ class _VideoPageState extends State<VideoPage> {
     print('liked users $dislikedusers');
     print('disliked $isdisliked');
   }
+  Future<void> subscribeuser()async{
+    final user=_auth.currentUser;
+    await _firestore.collection('Subscribers').doc(widget.UID).set({
+      'Subscriber UIDs':FieldValue.arrayUnion([
+        user!.uid
+      ])
+    });
+  }
+  Future<void> unsubscribeuser()async{
+    final user=_auth.currentUser;
+    await _firestore.collection('Subscribers').doc(widget.UID).set({
+      'Subscriber UIDs':FieldValue.arrayRemove([
+        user!.uid
+      ])
+    });
+  }
+  bool issubscribed=false;
+  Future<void> fetchsubscriber() async {
+    final user = _auth.currentUser;
+    try {
+      DocumentSnapshot documentSnapshot = await _firestore
+          .collection('Subscribers')
+          .doc(widget.UID)
+          .get();
+
+      if (documentSnapshot.exists) {
+        dynamic data = documentSnapshot.data();
+        if (data != null) {
+          List<dynamic> posts = (data['Subscriber UIDs'] as List?) ?? [];
+          setState(() {
+            subscriber =
+                posts.map((post) => post.toString()).toList();
+          });
+        }
+
+      }
+
+      print('following $subscriber');
+    } catch (e) {
+      print('Error fetching followers fetchfollowers: $e');
+    }
+    if(subscriber.contains(user!.uid)){
+      setState(() {
+        issubscribed=true;
+      });
+    }
+    else{
+      setState(() {
+        issubscribed=false;
+      });
+    }
+  }
   void fetchUserDataPeriodically() {
     // Fetch data initially
     fetchData();
@@ -134,6 +186,7 @@ class _VideoPageState extends State<VideoPage> {
   Future<void> fetchData() async {
     await fetchlikedusers();
     await fetchdislikedusers();
+    await fetchsubscriber();
   }
   @override
   void initState() {
@@ -141,6 +194,7 @@ class _VideoPageState extends State<VideoPage> {
     fetchlikedusers();
     fetchdislikedusers();
     fetchUserDataPeriodically();
+    fetchsubscriber();
     _controller = VideoPlayerController.network(
       widget.viddeourl,
     )..initialize().then((_) {
@@ -170,6 +224,7 @@ class _VideoPageState extends State<VideoPage> {
 
   @override
   Widget build(BuildContext context) {
+    final user=_auth.currentUser;
     return Scaffold(
       backgroundColor: Colors.black,
       body: SingleChildScrollView(
@@ -275,7 +330,7 @@ class _VideoPageState extends State<VideoPage> {
                             ],
                           ),
                         ),
-                        Slider(
+                        _controller.value.isInitialized?Slider(
                           value: _currentPositionNotifier.value.inSeconds.toDouble(),
                           min: 0,
                           max: _controller.value.duration.inSeconds.toDouble(),
@@ -284,7 +339,7 @@ class _VideoPageState extends State<VideoPage> {
                             _currentPositionNotifier.value = newDuration;
                             _controller.seekTo(newDuration);
                           },
-                        ),
+                        ):Container(),
                       ],
                     ),
                   )
@@ -351,6 +406,7 @@ class _VideoPageState extends State<VideoPage> {
               height: 35,
             ),
             Row(
+              mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 SizedBox(
                   width: 20,
@@ -367,12 +423,55 @@ class _VideoPageState extends State<VideoPage> {
                 SizedBox(
                   width: 20,
                 ),
-                InkWell(
-                  onTap: (){
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => SearchedUser(UID: widget.UID),));
-                  },
-                  child: Text(widget.username,style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold),),
-                )
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    InkWell(
+                      onTap: (){
+                        Navigator.push(context, MaterialPageRoute(builder: (context) => SearchedUser(UID: widget.UID),));
+                      },
+                      child: Text(widget.username,style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,
+                          fontSize: 12),),
+                    ),
+                    if(subscriber.length<=1)
+                      Text('${subscriber.length} Subscriber',style: TextStyle(color: Colors.grey,fontSize: 12,fontWeight: FontWeight.bold),),
+                    if(subscriber.length>1)
+                      Text('${subscriber.length} Subscribers',style: TextStyle(color: Colors.grey,fontSize: 12,fontWeight: FontWeight.bold),),
+                  ],
+                ),
+                SizedBox(
+                  width: 20,
+                ),
+                if(widget.UID!=user!.uid)
+                  Column(
+                    children: [
+                      if(issubscribed)
+                        Center(
+                          child: ElevatedButton(onPressed: (){
+                            unsubscribeuser();
+                            fetchsubscriber();
+                          },
+                              style: ButtonStyle(
+                                  backgroundColor: MaterialStatePropertyAll(Colors.grey[900])
+                              ),
+                              child: Icon(CupertinoIcons.bell,color: Colors.white,)),
+                        ),
+                      if(!issubscribed)
+                        Center(
+                          child: ElevatedButton(onPressed: (){
+                            subscribeuser();
+                            fetchsubscriber();
+                          },
+                              onLongPress: (){
+                            print('hi long press');
+                              },
+                              style: ButtonStyle(
+                                  backgroundColor: MaterialStatePropertyAll(Colors.white)
+                              ),
+                              child: Text('Subscribe',style: TextStyle(color: Colors.black),)),
+                        ),
+                    ],
+                  ),
               ],
             ),
             SizedBox(

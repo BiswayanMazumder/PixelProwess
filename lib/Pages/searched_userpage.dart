@@ -162,30 +162,57 @@ class _SearchedUserState extends State<SearchedUser> {
     print('Cover pic $coverpicurl');
   }
   int videocount=0;
-
+  Future<void> subscribeuser()async{
+    final user=_auth.currentUser;
+    await _firestore.collection('Subscribers').doc(widget.UID).set({
+      'Subscriber UIDs':FieldValue.arrayUnion([
+        user!.uid
+      ])
+    });
+  }
+  Future<void> unsubscribeuser()async{
+    final user=_auth.currentUser;
+    await _firestore.collection('Subscribers').doc(widget.UID).set({
+      'Subscriber UIDs':FieldValue.arrayRemove([
+        user!.uid
+      ])
+    });
+  }
+  bool issubscribed=false;
   Future<void> fetchsubscriber() async {
     final user = _auth.currentUser;
     try {
       DocumentSnapshot documentSnapshot = await _firestore
-          .collection('Subscriber')
+          .collection('Subscribers')
           .doc(widget.UID)
           .get();
 
       if (documentSnapshot.exists) {
         dynamic data = documentSnapshot.data();
         if (data != null) {
-          List<dynamic> posts = (data['Subscribers'] as List?) ?? [];
+          List<dynamic> posts = (data['Subscriber UIDs'] as List?) ?? [];
           setState(() {
             subscriber =
-                posts.map((post) => post['SubscriberUid'].toString()).toList();
+                posts.map((post) => post.toString()).toList();
           });
         }
+
       }
+
       print('following $subscriber');
     } catch (e) {
       print('Error fetching followers fetchfollowers: $e');
     }
-
+    if(subscriber.contains(user!.uid)){
+      setState(() {
+        issubscribed=true;
+      });
+    }
+    else{
+      setState(() {
+        issubscribed=false;
+      });
+    }
   }
   List<String> subscriber=[];
   List<String> videos=[];
@@ -318,6 +345,7 @@ class _SearchedUserState extends State<SearchedUser> {
   }
   Future<void> fetchData() async {
     await fetchusername();
+    await fetchsubscriber();
     await fetchprofilepic();
     await fetchcoverpic();
     await fetchbio();
@@ -337,6 +365,7 @@ class _SearchedUserState extends State<SearchedUser> {
     fetchvideo();
     fetchbio();
     fetchemail();
+    fetchsubscriber();
     fetchvideoid();
     fetchviews();
     fetchUserDataPeriodically();
@@ -416,21 +445,21 @@ class _SearchedUserState extends State<SearchedUser> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: [
-                          // if(subscriber.length==0)
-                          //   Text(
-                          //     'No Subscribers',
-                          //     style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w400, fontSize: 12),
-                          //   ),
-                          // if(subscriber.length==1)
-                          //   Text(
-                          //     ' ${subscriber.length} Subscriber',
-                          //     style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w400, fontSize: 12),
-                          //   ),
-                          // if(subscriber.length>1)
-                          //   Text(
-                          //     ' ${subscriber.length} Subscribers',
-                          //     style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w400, fontSize: 12),
-                          //   ),
+                          if(subscriber.length==0)
+                            Text(
+                              'No Subscribers',
+                              style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w400, fontSize: 12),
+                            ),
+                          if(subscriber.length==1)
+                            Text(
+                              ' ${subscriber.length} Subscriber',
+                              style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w400, fontSize: 12),
+                            ),
+                          if(subscriber.length>1)
+                            Text(
+                              ' ${subscriber.length} Subscribers',
+                              style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w400, fontSize: 12),
+                            ),
                           SizedBox(
                             width: 10,
                           ),
@@ -479,6 +508,33 @@ class _SearchedUserState extends State<SearchedUser> {
                           backgroundColor: MaterialStatePropertyAll(Colors.grey[900])
                       ),
                       child: Text('Manage Account',style: TextStyle(color: Colors.white),)),
+                ),
+              if(widget.UID!=user!.uid)
+                Column(
+                  children: [
+                    if(issubscribed)
+                      Center(
+                        child: ElevatedButton(onPressed: (){
+                          unsubscribeuser();
+                          fetchsubscriber();
+                        },
+                            style: ButtonStyle(
+                                backgroundColor: MaterialStatePropertyAll(Colors.grey[900])
+                            ),
+                            child: Text('Subscribed',style: TextStyle(color: Colors.white),)),
+                      ),
+                    if(!issubscribed)
+                      Center(
+                        child: ElevatedButton(onPressed: (){
+                          subscribeuser();
+                          fetchsubscriber();
+                        },
+                            style: ButtonStyle(
+                                backgroundColor: MaterialStatePropertyAll(Colors.white)
+                            ),
+                            child: Text('Subscribe',style: TextStyle(color: Colors.black),)),
+                      ),
+                  ],
                 ),
               SizedBox(
                 height: 30,
@@ -651,120 +707,121 @@ class _SearchedUserState extends State<SearchedUser> {
                               SizedBox(
                                 height: 5,
                               ),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  TextButton(onPressed: ()async{
-                                    print('CLicked ${videoid[i]}');
-                                    showDialog(context: context, builder: (context) {
-                                      return AlertDialog(
-                                        backgroundColor: Colors.black,
-                                        title: Column(
-                                          mainAxisAlignment: MainAxisAlignment.center,
-                                          crossAxisAlignment: CrossAxisAlignment.center,
-                                          children: [
-                                            Center(
-                                              child: Text('Are you sure?\n'
-                                                  'Video once deleted can never be recovered.',style:TextStyle(color: Colors.white,
-                                                  fontWeight: FontWeight.bold,fontSize: 15
-                                              ),),
-                                            ),
-                                          ],
-                                        ),
-                                        actions: [
-                                          Center(
-                                            child: Row(
-                                              mainAxisAlignment: MainAxisAlignment.center,
-                                              crossAxisAlignment: CrossAxisAlignment.center,
-                                              children: [
-                                                TextButton(onPressed: ()async{
-                                                  final user=_auth.currentUser;
-                                                  try{
-                                                    await _firestore.collection('User Uploaded Videos ID').doc(user!.uid).update({
-                                                      'VID':FieldValue.arrayRemove([videoid[i]])
-                                                    });
-                                                    await _firestore.collection('Global VIDs').doc('VIDs').update({
-                                                      'VID':FieldValue.arrayRemove([videoid[i]])
-                                                    });
-                                                    await _firestore.collection('Global Post').doc(videoid[i]).delete();
-                                                    Navigator.pop(context);
-                                                  }catch(e){
-                                                    print('Deletion $e');
-                                                  }
-                                                }, child: Text('Delete',style: TextStyle(
-                                                    color: Colors.red,
-                                                    fontWeight: FontWeight.bold
-                                                ),)),
-                                                TextButton(onPressed: ()async{
-                                                  Navigator.pop(context);
-                                                }, child: Text('Cancel',style: TextStyle(
-                                                    color: Colors.green,
-                                                    fontWeight: FontWeight.bold
-                                                ),))
-                                              ],
-                                            ),
-                                          )
-                                        ],
-                                      );
-                                    },);
-                                  }, child: Text('Delete',style: TextStyle(color: Colors.red),)),
-                                  Center(
-                                      child: TextButton(onPressed: ()async{
-                                        showDialog(context: context, builder: (context) {
-                                          return AlertDialog(
-                                            backgroundColor: Colors.black,
-                                            title:Center(
-                                              child: Text('Edit Caption',style: TextStyle(color: Colors.white,fontWeight: FontWeight.w300,
-                                                  fontSize: 15),),
-                                            ),
-                                            actions: [
-                                              Column(
-                                                children: [
-
-                                                  TextField(
-                                                    style: TextStyle(color: Colors.white),
-                                                    controller: _captionController,
-                                                    maxLength: 15,
-
-                                                  ),
-                                                  SizedBox(
-                                                    height: 10,
-                                                  ),
-                                                  Row(
-                                                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                                                    children: [
-
-                                                      ElevatedButton(onPressed: (){
-                                                        Navigator.pop(context);
-                                                      },
-                                                        child: Text('Cancel',style: TextStyle(color: Colors.white),),
-                                                        style: ButtonStyle(backgroundColor: MaterialStatePropertyAll(Colors.red)),
-                                                      ),
-                                                      SizedBox(
-                                                        width:10 ,
-                                                      ),
-                                                      ElevatedButton(onPressed: ()async{
-                                                        if(_captionController.text.isNotEmpty){
-                                                          await _firestore.collection('Global Post').doc(videoid[i]).update(
-                                                              {
-                                                                'Caption':_captionController.text
-                                                              });
-                                                          Navigator.pop(context);
-                                                        }
-                                                      }, child: Text('Make Changes',style: TextStyle(color: Colors.black),),
-                                                        style: ButtonStyle(backgroundColor: MaterialStatePropertyAll(Colors.green)),
-                                                      ),
-                                                    ],
-                                                  )
-                                                ],
+                              if(widget.UID==user!.uid)
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    TextButton(onPressed: ()async{
+                                      print('CLicked ${videoid[i]}');
+                                      showDialog(context: context, builder: (context) {
+                                        return AlertDialog(
+                                          backgroundColor: Colors.black,
+                                          title: Column(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            crossAxisAlignment: CrossAxisAlignment.center,
+                                            children: [
+                                              Center(
+                                                child: Text('Are you sure?\n'
+                                                    'Video once deleted can never be recovered.',style:TextStyle(color: Colors.white,
+                                                    fontWeight: FontWeight.bold,fontSize: 15
+                                                ),),
                                               ),
                                             ],
-                                          );
-                                        },);
-                                        print('Clicked ${videoid[i]}');
-                                      }, child: Text('Edit',style: TextStyle(color: Colors.white),),)),
-                                ],
-                              )
+                                          ),
+                                          actions: [
+                                            Center(
+                                              child: Row(
+                                                mainAxisAlignment: MainAxisAlignment.center,
+                                                crossAxisAlignment: CrossAxisAlignment.center,
+                                                children: [
+                                                  TextButton(onPressed: ()async{
+                                                    final user=_auth.currentUser;
+                                                    try{
+                                                      await _firestore.collection('User Uploaded Videos ID').doc(user!.uid).update({
+                                                        'VID':FieldValue.arrayRemove([videoid[i]])
+                                                      });
+                                                      await _firestore.collection('Global VIDs').doc('VIDs').update({
+                                                        'VID':FieldValue.arrayRemove([videoid[i]])
+                                                      });
+                                                      await _firestore.collection('Global Post').doc(videoid[i]).delete();
+                                                      Navigator.pop(context);
+                                                    }catch(e){
+                                                      print('Deletion $e');
+                                                    }
+                                                  }, child: Text('Delete',style: TextStyle(
+                                                      color: Colors.red,
+                                                      fontWeight: FontWeight.bold
+                                                  ),)),
+                                                  TextButton(onPressed: ()async{
+                                                    Navigator.pop(context);
+                                                  }, child: Text('Cancel',style: TextStyle(
+                                                      color: Colors.green,
+                                                      fontWeight: FontWeight.bold
+                                                  ),))
+                                                ],
+                                              ),
+                                            )
+                                          ],
+                                        );
+                                      },);
+                                    }, child: Text('Delete',style: TextStyle(color: Colors.red),)),
+                                    Center(
+                                        child: TextButton(onPressed: ()async{
+                                          showDialog(context: context, builder: (context) {
+                                            return AlertDialog(
+                                              backgroundColor: Colors.black,
+                                              title:Center(
+                                                child: Text('Edit Caption',style: TextStyle(color: Colors.white,fontWeight: FontWeight.w300,
+                                                    fontSize: 15),),
+                                              ),
+                                              actions: [
+                                                Column(
+                                                  children: [
+
+                                                    TextField(
+                                                      style: TextStyle(color: Colors.white),
+                                                      controller: _captionController,
+                                                      maxLength: 15,
+
+                                                    ),
+                                                    SizedBox(
+                                                      height: 10,
+                                                    ),
+                                                    Row(
+                                                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                                      children: [
+
+                                                        ElevatedButton(onPressed: (){
+                                                          Navigator.pop(context);
+                                                        },
+                                                          child: Text('Cancel',style: TextStyle(color: Colors.white),),
+                                                          style: ButtonStyle(backgroundColor: MaterialStatePropertyAll(Colors.red)),
+                                                        ),
+                                                        SizedBox(
+                                                          width:10 ,
+                                                        ),
+                                                        ElevatedButton(onPressed: ()async{
+                                                          if(_captionController.text.isNotEmpty){
+                                                            await _firestore.collection('Global Post').doc(videoid[i]).update(
+                                                                {
+                                                                  'Caption':_captionController.text
+                                                                });
+                                                            Navigator.pop(context);
+                                                          }
+                                                        }, child: Text('Make Changes',style: TextStyle(color: Colors.black),),
+                                                          style: ButtonStyle(backgroundColor: MaterialStatePropertyAll(Colors.green)),
+                                                        ),
+                                                      ],
+                                                    )
+                                                  ],
+                                                ),
+                                              ],
+                                            );
+                                          },);
+                                          print('Clicked ${videoid[i]}');
+                                        }, child: Text('Edit',style: TextStyle(color: Colors.white),),)),
+                                  ],
+                                )
                             ],
                           ),
                         ),

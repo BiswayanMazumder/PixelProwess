@@ -537,19 +537,18 @@ class _AccountpageState extends State<Accountpage> {
                                   {
                                     'Views':views_video+1
                                   });
-                              // Navigator.push(
-                              //   context,
-                              //   MaterialPageRoute(
-                              //     builder: (context) => User_video(
-                              //       thumbnail: thumbnail[i],
-                              //       views: views[i],
-                              //       caption: captions[i],
-                              //       viddeourl: videos[i],
-                              //       uploaddate: uploaddate[i],
-                              //       Index: i,
-                              //     ),
-                              //   ),
-                              // );
+                              Navigator.push(context, MaterialPageRoute(builder: (context) => VideoPage(
+                                  caption: captions[i],
+                                  uploaddate: uploaddate[i],
+                                  Index: i,
+                                  viddeourl: videos[i],
+                                  views: views[i],
+                                  thumbnail: thumbnail[i],
+                                  username: username,
+                                  profilepicurl: profilepicurl,
+                                  UID: user!.uid,
+                                  VideoID: videoid[i]
+                              ),));
                               print('index $i');
                             },
                             child: Image.network(
@@ -576,6 +575,18 @@ class _AccountpageState extends State<Accountpage> {
                       SizedBox(width: 20),
                       InkWell(
                         onTap: ()async{
+                          Navigator.push(context, MaterialPageRoute(builder: (context) => VideoPage(
+                              caption: captions[i],
+                              uploaddate: uploaddate[i],
+                              Index: i,
+                              viddeourl: videos[i],
+                              views: views[i],
+                              thumbnail: thumbnail[i],
+                              username: username,
+                              profilepicurl: profilepicurl,
+                              UID: user!.uid,
+                              VideoID: videoid[i]
+                          ),));
                           final docsnap=await _firestore.collection('Global Post').doc(videoid[i]).get();
                           if(docsnap.exists){
                             views_video=docsnap.data()?['Views'];
