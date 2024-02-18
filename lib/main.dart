@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pixelprowess/Homepages/Accountpage.dart';
 import 'package:pixelprowess/Homepages/LandingPage.dart';
+import 'package:pixelprowess/Navigation%20Bar/Nav_Bar.dart';
 import 'package:pixelprowess/Pages/login.dart';
 import 'package:pixelprowess/Pages/signup.dart';
 import 'package:pixelprowess/firebase_options.dart';
@@ -26,7 +27,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'PixelProwess',
       debugShowCheckedModeBanner: false,
-      home: user!=null?LandingPage():HomePage(),
+      home: user!=null?NavBar():HomePage(),
     );
   }
 }

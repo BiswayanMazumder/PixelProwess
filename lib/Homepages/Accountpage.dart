@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:pixelprowess/Pages/test_video_if.dart';
 import 'package:pixelprowess/Pages/upload_page.dart';
-import 'package:pixelprowess/Video%20Card/uservideo(Sample).dart';
+import 'package:pixelprowess/Video%20Card/VideoCard.dart';
 import 'package:pixelprowess/main.dart';
 import 'package:timeago/timeago.dart'as timeago;
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -342,9 +342,6 @@ class _AccountpageState extends State<Accountpage> {
         elevation: 0,
         actions: [
           IconButton(onPressed: (){
-            Navigator.push(context, MaterialPageRoute(builder: (context) => Upload_Page(),));
-          }, icon: Icon(Icons.add_box_outlined,color: Colors.white,)),
-          IconButton(onPressed: (){
             _auth.signOut();
             Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomePage(),));
           }, icon: Icon(Icons.logout,color: Colors.white,))
@@ -646,6 +643,7 @@ class _AccountpageState extends State<Accountpage> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 TextButton(onPressed: ()async{
+                                  print('CLicked ${videoid[i]}');
                                   showDialog(context: context, builder: (context) {
                                     return AlertDialog(
                                       backgroundColor: Colors.black,
@@ -668,7 +666,19 @@ class _AccountpageState extends State<Accountpage> {
                                             crossAxisAlignment: CrossAxisAlignment.center,
                                             children: [
                                               TextButton(onPressed: ()async{
-                                                await _firestore.collection('Global Post').doc(videoid[i]).delete();
+                                                final user=_auth.currentUser;
+                                                try{
+                                                  await _firestore.collection('User Uploaded Videos ID').doc(user!.uid).update({
+                                                    'VID':FieldValue.arrayRemove([videoid[i]])
+                                                  });
+                                                  await _firestore.collection('Global VIDs').doc('VIDs').update({
+                                                    'VID':FieldValue.arrayRemove([videoid[i]])
+                                                  });
+                                                  await _firestore.collection('Global Post').doc(videoid[i]).delete();
+                                                  Navigator.pop(context);
+                                                }catch(e){
+                                                  print('Deletion $e');
+                                                }
                                               }, child: Text('Delete',style: TextStyle(
                                                 color: Colors.red,
                                                 fontWeight: FontWeight.bold

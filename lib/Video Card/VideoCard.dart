@@ -4,195 +4,143 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:pixelprowess/Pages/searched_userpage.dart';
 import 'package:video_player/video_player.dart';
 import 'package:timeago/timeago.dart'as timeago;
 import 'package:like_button/like_button.dart';
-class User_video extends StatefulWidget {
+class VideoPage extends StatefulWidget {
   final String caption;
+  final String UID;
   final DateTime uploaddate;
   final int Index;
   final String viddeourl;
   final int views;
   final String thumbnail;
-
-  User_video({
+  final String username;
+  final String profilepicurl;
+  final String VideoID;
+  VideoPage({
     required this.caption,
     required this.uploaddate,
     required this.Index,
     required this.viddeourl,
     required this.views,
     required this.thumbnail,
+    required this.username,
+    required this.profilepicurl,
+    required this.UID,
+    required this.VideoID
   });
 
   @override
-  State<User_video> createState() => _User_videoState();
+  State<VideoPage> createState() => _VideoPageState();
 }
 
-class _User_videoState extends State<User_video> {
+class _VideoPageState extends State<VideoPage> {
   late VideoPlayerController _controller;
   late ValueNotifier<Duration> _currentPositionNotifier;
   bool _showControls = true;
   bool _isFullscreen = false;
-  String username='';
   FirebaseAuth _auth=FirebaseAuth.instance;
   FirebaseFirestore _firestore=FirebaseFirestore.instance;
-  Future<void>fetchusername()async{
-    final user=_auth.currentUser;
-    final docsnap=await _firestore.collection('User Details').doc(user!.uid).get();
-    if(docsnap.exists){
-      setState(() {
-        username=docsnap.data()?['Username'];
-      });
-    }
-  }
-  String profilepicurl='';
-  Future<void> fetchprofilepic()async{
-    final user=_auth.currentUser;
-    final docsnap=await _firestore.collection('User Profile Pictures').doc(user!.uid).get();
-    if(docsnap.exists){
-      setState(() {
-        profilepicurl=docsnap.data()?['Profile Pic'];
-      });
-    }
-  }
-  Future<void> fetchsubscriber() async {
-    final user = _auth.currentUser;
-    try {
-      DocumentSnapshot documentSnapshot = await _firestore
-          .collection('Subscriber')
-          .doc(user?.uid)
-          .get();
-
-      if (documentSnapshot.exists) {
-        dynamic data = documentSnapshot.data();
-        if (data != null) {
-          List<dynamic> posts = (data['Subscribers'] as List?) ?? [];
-          setState(() {
-            subscriber =
-                posts.map((post) => post['SubscriberUid'].toString()).toList();
-          });
-        }
-      }
-      print('following $subscriber');
-    } catch (e) {
-      print('Error fetching followers fetchfollowers: $e');
-    }
-
-  }
   double _sliderValue = 0.0; // Current value of the slider
   Duration _duration = Duration();
   List<String> subscriber=[];
+  List<String> likedusers=[];
   bool isliked=false;
+  List<String> dislikedusers=[];
   bool isdisliked=false;
-  List<String> dislikeduser=[];
-  Future<void> fetchdislike() async{
+  Future<void> Likeduser() async{
     final user=_auth.currentUser;
-    try{
-      DocumentSnapshot documentSnapshot=await _firestore
-          .collection('dislikes')
-          .doc('dislikes')
-          .get();
-      if(documentSnapshot.exists){
-        dynamic data=documentSnapshot.data();
-        if(data!=null){
-          List<dynamic> posts=(data['dislike'] as List?)??[];
-          setState(() {
-            dislikeduser=posts.map((post) => post['userid'].toString()).toList();
-          });
-        }
-      }
-    }catch(e){
-      print('dislike error $e');
-    }
-    print('userid disliked$likeduser');
+    await _firestore.collection('Liked Videos').doc(widget.VideoID).set({
+      'UIDs':FieldValue.arrayUnion([
+        user!.uid
+      ])
+    },SetOptions(merge:true));
   }
-  Future<void> isuserdisliked() async {
-    await fetchdislike();
-    final user = _auth.currentUser;
-    if (user != null) {
-      setState(() {
-        isdisliked = dislikeduser.contains(user.uid);
-      });
-    }
-  }
-  Future<void> increaseCount() async {
-    await isuserliked();
-    final user = _auth.currentUser;
-    if (user != null) {
-      if(isliked){
-        await _firestore.collection('Likes').doc('likes').set({
-          'like': FieldValue.arrayUnion([
-            {'userid': user.uid}
-          ])
-        },SetOptions(merge: true));
-      }
-      if(!isliked){
-        await _firestore.collection('Likes').doc('likes').set({
-          'like': FieldValue.arrayRemove([
-            {'userid': user.uid}
-          ])
-        },SetOptions(merge: true));
-      }
-    } else {
-      print('User is not authenticated.');
-      // Handle the case where the user is not authenticated.
-    }
-  }
-  List<String> likeduser=[];
-  Future<void> fetchlike() async{
+  Future<void> dislikeduser() async{
     final user=_auth.currentUser;
-    try{
-      DocumentSnapshot documentSnapshot=await _firestore
-          .collection('Likes')
-          .doc('likes')
-          .get();
-      if(documentSnapshot.exists){
-        dynamic data=documentSnapshot.data();
-        if(data!=null){
-          List<dynamic> posts=(data['like'] as List?)??[];
-          setState(() {
-            likeduser=posts.map((post) => post['userid'].toString()).toList();
-          });
-        }
+    await _firestore.collection('Disliked Videos').doc(widget.VideoID).set({
+      'UIDs':FieldValue.arrayUnion([
+        user!.uid
+      ])
+    },SetOptions(merge: true));
+  }
+  Future<void> fetchlikedusers() async{
+    DocumentSnapshot documentSnapshot = await _firestore
+        .collection('Liked Videos')
+        .doc(widget.VideoID)
+        .get();
+    if (documentSnapshot.exists) {
+      dynamic data = documentSnapshot.data();
+      if (data != null) {
+        List<dynamic> posts = (data['UIDs'] as List?) ?? [];
+        setState(() {
+          likedusers =posts.map((post) => post.toString()).toList();
+        });
       }
-    }catch(e){
-      print('like error $e');
+      final user=_auth.currentUser;
+      if(likedusers.contains(user!.uid)){
+        setState(() {
+          isliked=true;
+        });
+      }
+      else{
+        setState(() {
+          isliked=false;
+        });
+      }
     }
-    print('userid $likeduser');
+    print('liked users $likedusers');
+    print('liked $isliked');
   }
-  Future<void> isuserliked() async {
-    await fetchlike();
-    final user = _auth.currentUser;
-    if (user != null) {
-      setState(() {
-        isliked = likeduser.contains(user.uid);
-      });
+  Future<void> fetchdislikedusers() async{
+    DocumentSnapshot documentSnapshot = await _firestore
+        .collection('Disliked Videos')
+        .doc(widget.VideoID)
+        .get();
+    if (documentSnapshot.exists) {
+      dynamic data = documentSnapshot.data();
+      if (data != null) {
+        List<dynamic> posts = (data['UIDs'] as List?) ?? [];
+        setState(() {
+          dislikedusers =posts.map((post) => post.toString()).toList();
+        });
+      }
+      final user=_auth.currentUser;
+      if(dislikedusers.contains(user!.uid)){
+        setState(() {
+          isdisliked=true;
+        });
+      }
+      else{
+        setState(() {
+          isdisliked=false;
+        });
+      }
     }
+    print('liked users $dislikedusers');
+    print('disliked $isdisliked');
   }
+  void fetchUserDataPeriodically() {
+    // Fetch data initially
+    fetchData();
 
-  Future<void>fetchdataperiodically()async{
+    // Set up a timer to fetch data every 2 seconds
     Timer.periodic(Duration(seconds: 2), (timer) {
-      fetchlike();
-      fetchusername();
-      fetchprofilepic();
-      fetchusername();
-      isuserliked();
-      isuserdisliked();
-      fetchdislike();
+      fetchData();
     });
+  }
+  Future<void> fetchData() async {
+    await fetchlikedusers();
+    await fetchdislikedusers();
   }
   @override
   void initState() {
     super.initState();
-    fetchusername();
-    fetchdataperiodically();
-    fetchsubscriber();
-    fetchprofilepic();
-    fetchlike();
-    isuserliked();
-    isuserdisliked();
-    fetchdislike();
-    print('is liked $isliked');
+    fetchlikedusers();
+    fetchdislikedusers();
+    fetchUserDataPeriodically();
     _controller = VideoPlayerController.network(
       widget.viddeourl,
     )..initialize().then((_) {
@@ -407,94 +355,81 @@ class _User_videoState extends State<User_video> {
                 SizedBox(
                   width: 20,
                 ),
-                CircleAvatar(
-                  radius: 20,
-                  backgroundImage: NetworkImage(profilepicurl),
+                InkWell(
+                  onTap: (){
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => SearchedUser(UID: widget.UID),));
+                  },
+                  child: CircleAvatar(
+                    radius: 20,
+                    backgroundImage: NetworkImage(widget.profilepicurl),
+                  ),
                 ),
                 SizedBox(
                   width: 20,
                 ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(username,style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontSize: 15),),
-                    SizedBox(height: 5,),
-                    if(subscriber.length==0)
-                      Text('No Subscriber',style: TextStyle(color: Colors.grey,fontWeight: FontWeight.w300,fontSize: 12),),
-                    if(subscriber.length==1)
-                      Text('${subscriber.length} Subscriber',style: TextStyle(color: Colors.grey,fontWeight: FontWeight.w300,fontSize: 12),),
-                    if(subscriber.length>1)
-                      Text('${subscriber.length} Subscriber',style: TextStyle(color: Colors.grey,fontWeight: FontWeight.w300,fontSize: 12),),
-                  ],
-                ),
+                InkWell(
+                  onTap: (){
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => SearchedUser(UID: widget.UID),));
+                  },
+                  child: Text(widget.username,style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold),),
+                )
               ],
             ),
             SizedBox(
-              height: 20,
+              height: 50,
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                isliked?IconButton(onPressed: ()async{
-                  final user=_auth.currentUser;
-                  print('liked ');
-                  await _firestore.collection('Likes').doc('likes').set({
-                    'like': FieldValue.arrayRemove([
-                      {'userid': user!.uid}
-                    ])
-                  },SetOptions(merge: true));
-                }, icon: Icon(CupertinoIcons.hand_thumbsup_fill,color: Colors.white,)):
-                IconButton(onPressed: ()async{
-                  final user=_auth.currentUser;
-                  print('unliked ');
-                  await _firestore.collection('dislikes').doc('dislikes').set({
-                    'dislike': FieldValue.arrayRemove([
-                      {'userid': user!.uid}
-                    ])
-                  },SetOptions(merge: true));
-                  await _firestore.collection('Likes').doc('likes').set({
-                    'like': FieldValue.arrayUnion([
-                      {'userid': user!.uid}
-                    ])
-                  },SetOptions(merge: true));
-                }, icon: Icon(CupertinoIcons.hand_thumbsup,color: Colors.white,)),
-
-                if(likeduser.length==1)
-                  Text('${likeduser.length}',style: TextStyle(color: Colors.white),),
-                if(likeduser.length>1)
-                  Text('${likeduser.length}',style: TextStyle(color: Colors.white),),
+                if(isliked)
+                  IconButton(onPressed: ()async{
+                    final user=_auth.currentUser;
+                    await _firestore.collection('Liked Videos').doc(widget.VideoID).set({
+                      'UIDs':FieldValue.arrayRemove([
+                        user!.uid
+                      ])
+                    });
+                    fetchlikedusers();
+                  }, icon: Icon(CupertinoIcons.hand_thumbsup_fill,color: Colors.white,)),
+                if(!isliked)
+                  IconButton(onPressed: ()async{
+                    final user=_auth.currentUser;
+                    await _firestore.collection('Disliked Videos').doc(widget.VideoID).set({
+                      'UIDs':FieldValue.arrayRemove([
+                        user!.uid
+                      ])
+                    });
+                    Likeduser();
+                    fetchlikedusers();
+                  }, icon: Icon(CupertinoIcons.hand_thumbsup,color: Colors.white,)),
                 SizedBox(
-                  width: 20,
+                  width: 50,
                 ),
-                isdisliked?IconButton(onPressed: ()async{
-                  final user=_auth.currentUser;
-                  print('liked ');
-                  await _firestore.collection('dislikes').doc('dislikes').set({
-                    'dislike': FieldValue.arrayRemove([
-                      {'userid': user!.uid}
-                    ])
-                  },SetOptions(merge: true));
-                }, icon: Icon(CupertinoIcons.hand_thumbsdown_fill,color: Colors.white,)):
-                IconButton(onPressed: ()async{
-                  final user=_auth.currentUser;
-                  print('unliked ');
-                  await _firestore.collection('Likes').doc('likes').set({
-                    'like': FieldValue.arrayRemove([
-                      {'userid': user!.uid}
-                    ])
-                  },SetOptions(merge: true));
-                  await _firestore.collection('dislikes').doc('dislikes').set({
-                    'dislike': FieldValue.arrayUnion([
-                      {'userid': user!.uid}
-                    ])
-                  },SetOptions(merge: true));
-
-                }, icon: Icon(CupertinoIcons.hand_thumbsdown,color: Colors.white,)),
-                if(dislikeduser.length==1)
-                  Text('${dislikeduser.length}',style: TextStyle(color: Colors.white),),
-                if(dislikeduser.length>1)
-                  Text('${dislikeduser.length}',style: TextStyle(color: Colors.white),)
+                if(isdisliked)
+                  IconButton(onPressed: ()async{
+                    final user=_auth.currentUser;
+                    await _firestore.collection('Disliked Videos').doc(widget.VideoID).set({
+                      'UIDs':FieldValue.arrayRemove([
+                        user!.uid
+                      ])
+                    });
+                    fetchdislikedusers();
+                  }, icon: Icon(CupertinoIcons.hand_thumbsdown_fill,color: Colors.white,)),
+                if(!isdisliked)
+                  IconButton(onPressed: ()async{
+                    dislikeduser();
+                    final user=_auth.currentUser;
+                    await _firestore.collection('Liked Videos').doc(widget.VideoID).set({
+                      'UIDs':FieldValue.arrayRemove([
+                        user!.uid
+                      ])
+                    });
+                    fetchlikedusers();
+                  }, icon: Icon(CupertinoIcons.hand_thumbsdown,color: Colors.white,)),
               ],
+            ),
+            SizedBox(
+              height: 20,
             ),
           ],
         ),

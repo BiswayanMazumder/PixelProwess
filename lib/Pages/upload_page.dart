@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:math';
+import 'package:http/http.dart' as http;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -7,6 +8,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:pixelprowess/Homepages/Accountpage.dart';
+import 'package:pixelprowess/Navigation%20Bar/Nav_Bar.dart';
 import 'package:pixelprowess/main.dart';
 import 'package:video_player/video_player.dart';
 
@@ -21,6 +23,20 @@ class _Upload_PageState extends State<Upload_Page> {
   FirebaseAuth _auth = FirebaseAuth.instance;
   FirebaseFirestore _firestore = FirebaseFirestore.instance;
   String username = '';
+  Future<String?> fetchIPAddress() async {
+    try {
+      final response = await http.get(Uri.parse('https://api.ipify.org'));
+      if (response.statusCode == 200) {
+        return response.body;
+      } else {
+        print('Failed to fetch IP address: ${response.statusCode}');
+        return null;
+      }
+    } catch (e) {
+      print('Error fetching IP address: $e');
+      return null;
+    }
+  }
   Future<void> fetchusername() async {
     final user = _auth.currentUser;
     final docsnap =
@@ -225,13 +241,15 @@ class _Upload_PageState extends State<Upload_Page> {
   Future<void> _storeRandomCombination(String combination) async {
     // Store the combination in Firestore
     final user = _auth.currentUser;
+    final ipAddress = await fetchIPAddress();
     await _firestore.collection('Global Post').doc(combination).set({
       'Uploaded At': DateTime.now(),
       'Video Link': await _uploadMediaFile(),
       'Thumbnail Link': await _uploadImage(),
       'Caption': _title.text,
       'Uploaded UID': user!.uid,
-      'Views':0
+      'Views':0,
+      'IP of uploader':ipAddress
     });
     await _firestore.collection('Global VIDs').doc('VIDs').set({
       'VID': FieldValue.arrayUnion([combination]),
@@ -277,7 +295,22 @@ class _Upload_PageState extends State<Upload_Page> {
                     strokeWidth: 5,
                   ),
                 );
-                Navigator.push(context, MaterialPageRoute(builder: (context) => Accountpage(),));
+                Navigator.push(context, MaterialPageRoute(builder: (context) => NavBar(),));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    backgroundColor: Colors.green,
+                    content: Text('Successfully posted video'),
+                    duration: Duration(seconds: 5),
+                  ),
+                );
+              }else{
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    backgroundColor: Colors.red,
+                    content: Text('Unable to post your video'),
+                    duration: Duration(seconds: 2),
+                  ),
+                );
               }
               },
               child: Text(
@@ -285,12 +318,7 @@ class _Upload_PageState extends State<Upload_Page> {
                 style: TextStyle(color: Colors.white),
               ))
         ],
-        leading: IconButton(
-          onPressed: () {
-            Navigator.pop(context);
-          },
-          icon: Icon(CupertinoIcons.back, color: Colors.white),
-        ),
+        automaticallyImplyLeading: false,
         backgroundColor: Colors.black,
       ),
       body: SingleChildScrollView(
@@ -485,7 +513,7 @@ class _Upload_PageState extends State<Upload_Page> {
             TextField(
                 style: TextStyle(color: Colors.white),
                 controller: _title,
-                maxLength: 15,
+                maxLength: 18,
                 decoration: InputDecoration(
                     labelText: 'Title',
                     labelStyle:

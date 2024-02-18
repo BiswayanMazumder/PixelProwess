@@ -5,6 +5,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:pixelprowess/Homepages/Accountpage.dart';
+import 'package:pixelprowess/Homepages/LandingPage.dart';
+import 'package:pixelprowess/Navigation%20Bar/Nav_Bar.dart';
 import 'package:pixelprowess/firebase_options.dart';
 class Login extends StatefulWidget {
   const Login({Key? key}) : super(key: key);
@@ -182,8 +184,28 @@ class _LoginState extends State<Login> {
                 padding: EdgeInsets.symmetric(horizontal: 30),
                 child: ElevatedButton(
                     onPressed: ()async{
-                      await _auth.signInWithEmailAndPassword(email: _emailcontroller.text, password: _password.text);
-                      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) =>Accountpage(),));
+                      if(_username.text.isEmpty && _password.text.isEmpty){
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            backgroundColor: Colors.red,
+                            content: Text('Please enter correct credentials'),
+                            duration: Duration(seconds: 2),
+                          ),
+                        );
+                      }else{
+                        try{
+                          await _auth.signInWithEmailAndPassword(email: _emailcontroller.text, password: _password.text);
+                          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) =>NavBar(),));
+                        }catch(e){
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              backgroundColor: Colors.red,
+                              content: Text('Please enter correct credentials'),
+                              duration: Duration(seconds: 2),
+                            ),
+                          );
+                        }
+                      }
                     },
                     style: ButtonStyle(backgroundColor: MaterialStatePropertyAll(Colors.purple)),
                     child: Text('Log In', style: TextStyle(color: Colors.white),)))
