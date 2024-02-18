@@ -512,6 +512,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.8"
+  reflection_effect:
+    dependency: "direct main"
+    description:
+      name: reflection_effect
+      sha256: "24b1c9166a95a7372eb68626824b7f0dbed7e4499a067fc1bd1d05884a4f8553"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.0"
   sky_engine:
     dependency: transitive
     description: flutter

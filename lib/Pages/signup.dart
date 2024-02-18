@@ -56,8 +56,10 @@ class _SignupState extends State<Signup> {
   }
 
   Future<void> adduser()async{
+    final user=_auth.currentUser;
     try{
       await _auth.createUserWithEmailAndPassword(email: _emailcontroller.text.toString(), password: _password.text.toString());
+
     }catch(e){
       print('Error $e');
     }

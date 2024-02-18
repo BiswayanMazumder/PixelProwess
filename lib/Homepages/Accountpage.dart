@@ -156,17 +156,17 @@ class _AccountpageState extends State<Accountpage> {
     final user = _auth.currentUser;
     try {
       DocumentSnapshot documentSnapshot = await _firestore
-          .collection('Subscriber')
+          .collection('Subscribers')
           .doc(user?.uid)
           .get();
 
       if (documentSnapshot.exists) {
         dynamic data = documentSnapshot.data();
         if (data != null) {
-          List<dynamic> posts = (data['Subscribers'] as List?) ?? [];
+          List<dynamic> posts = (data['Subscriber UIDs'] as List?) ?? [];
           setState(() {
             subscriber =
-                posts.map((post) => post['SubscriberUid'].toString()).toList();
+                posts.map((post) => post.toString()).toList();
           });
         }
       }

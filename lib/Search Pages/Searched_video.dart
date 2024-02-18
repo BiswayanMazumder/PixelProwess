@@ -1,76 +1,204 @@
 import 'dart:async';
+import 'package:timeago/timeago.dart'as timeago;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:pixelprowess/Pages/searched_userpage.dart';
 import 'package:video_player/video_player.dart';
-import 'package:timeago/timeago.dart'as timeago;
-import 'package:like_button/like_button.dart';
-class VideoPage extends StatefulWidget {
-  final String caption;
-  final String UID;
-  final DateTime uploaddate;
-  final int Index;
-  final String viddeourl;
-  final int views;
-  final String thumbnail;
-  final String username;
-  final String profilepicurl;
-  final String VideoID;
-  VideoPage({
-    required this.caption,
-    required this.uploaddate,
-    required this.Index,
-    required this.viddeourl,
-    required this.views,
-    required this.thumbnail,
-    required this.username,
-    required this.profilepicurl,
-    required this.UID,
-    required this.VideoID
+class Searched_video extends StatefulWidget {
+  final UIDs;
+  Searched_video({
+    required this.UIDs,
   });
-
   @override
-  State<VideoPage> createState() => _VideoPageState();
+  State<Searched_video> createState() => _Searched_videoState();
 }
 
-class _VideoPageState extends State<VideoPage> {
+class _Searched_videoState extends State<Searched_video> {
+  FirebaseFirestore _firestore=FirebaseFirestore.instance;
+  FirebaseAuth _auth=FirebaseAuth.instance;
+  String thumbnail='';
   late VideoPlayerController _controller;
   late ValueNotifier<Duration> _currentPositionNotifier;
   bool _showControls = true;
-  bool _isFullscreen = false;
-  FirebaseAuth _auth=FirebaseAuth.instance;
-  FirebaseFirestore _firestore=FirebaseFirestore.instance;
-  double _sliderValue = 0.0; // Current value of the slider
-  Duration _duration = Duration();
+  Future<void> fetchthumbnail()async{
+    final docsnap=await _firestore.collection('Global Post').doc(widget.UIDs).get();
+    if(docsnap.exists){
+      setState(() {
+        thumbnail=docsnap.data()?['Thumbnail Link'];
+      });
+    }
+    print('thumbnail fetched $thumbnail');
+  }
+  String videourl='';
+  Future<void> fetchvideourl()async{
+    final docsnap=await _firestore.collection('Global Post').doc(widget.UIDs).get();
+    if(docsnap.exists){
+      setState(() {
+        videourl=docsnap.data()?['Video Link'];
+      });
+    }
+    print('video fetched $videourl');
+  }
+  String UID='';
+  Future<void> fetchuid()async{
+    final docsnap=await _firestore.collection('Global Post').doc(widget.UIDs).get();
+    if(docsnap.exists){
+      setState(() {
+        UID=docsnap.data()?['Uploaded UID'];
+      });
+    }
+    print('uid fetched $UID');
+  }
+  String username='';
+  Future<void> fetchusername() async{
+    await fetchuid();
+    final docsnap=await _firestore.collection('User Details').doc(UID).get();
+    if(docsnap.exists){
+      setState(() {
+        username=docsnap.data()?['Username'];
+      });
+    }
+  }
+  String caption='';
+  Future<void> fetchcaption()async{
+    final docsnap=await _firestore.collection('Global Post').doc(widget.UIDs).get();
+    if(docsnap.exists){
+      setState(() {
+        caption=docsnap.data()?['Caption'];
+      });
+    }
+    print('caption fetched $caption');
+  }
+  int views=0;
+  Future<void> fetchviews()async{
+    final docsnap=await _firestore.collection('Global Post').doc(widget.UIDs).get();
+    if(docsnap.exists){
+      setState(() {
+        views=docsnap.data()?['Views'];
+      });
+    }
+    print('views fetched $views');
+  }
+  DateTime uploaddate=DateTime.now();
+  Future<void> fetchuploaddate()async{
+    final docsnap=await _firestore.collection('Global Post').doc(widget.UIDs).get();
+    if(docsnap.exists){
+      final timestamp = docsnap.data()?['Uploaded At'] as Timestamp;
+      final uploadDateTime = timestamp.toDate();
+      setState(() {
+        uploaddate = uploadDateTime;
+      });
+    }
+    print('upload date fetched $uploaddate');
+  }
   List<String> subscriber=[];
-  List<String> likedusers=[];
-  bool isliked=false;
-  List<String> dislikedusers=[];
+  bool issubscribed=false;
+  Future<void> fetchsubscriber() async {
+    await fetchuid();
+    final user = _auth.currentUser;
+    try {
+      DocumentSnapshot documentSnapshot = await _firestore
+          .collection('Subscribers')
+          .doc(UID)
+          .get();
+
+      if (documentSnapshot.exists) {
+        dynamic data = documentSnapshot.data();
+        if (data != null) {
+          List<dynamic> posts = (data['Subscriber UIDs'] as List?) ?? [];
+          setState(() {
+            subscriber =
+                posts.map((post) => post.toString()).toList();
+          });
+        }
+
+      }
+
+      print('following searched$subscriber');
+    } catch (e) {
+      print('Error fetching followers fetchfollowers: $e');
+    }
+    if(subscriber.contains(user!.uid)){
+      setState(() {
+        issubscribed=true;
+      });
+    }
+    else{
+      setState(() {
+        issubscribed=false;
+      });
+    }
+  }
+  Future<void> subscribeuser()async{
+    final user=_auth.currentUser;
+    await fetchuid();
+    await _firestore.collection('Subscribers').doc(UID).set({
+      'Subscriber UIDs':FieldValue.arrayUnion([
+        user!.uid
+      ])
+    });
+  }
+  Future<void> unsubscribeuser()async{
+    final user=_auth.currentUser;
+    await fetchuid();
+    await _firestore.collection('Subscribers').doc(UID).set({
+      'Subscriber UIDs':FieldValue.arrayRemove([
+        user!.uid
+      ])
+    });
+  }
+  String profileurl='';
+  Future<void>fetchprofilepictures()async{
+    await fetchuid();
+    final docsnap=await _firestore.collection('User Profile Pictures').doc(UID).get();
+    if(docsnap.exists){
+      setState(() {
+        profileurl=docsnap.data()?['Profile Pic'];
+      });
+    }
+    print('profile pics $profileurl');
+  }
   bool isdisliked=false;
-  Future<void> Likeduser() async{
-    final user=_auth.currentUser;
-    await _firestore.collection('Liked Videos').doc(widget.VideoID).set({
-      'UIDs':FieldValue.arrayUnion([
-        user!.uid
-      ])
-    },SetOptions(merge:true));
+  List<String>dislikedusers=[];
+  Future<void> fetchdislikedusers() async{
+    DocumentSnapshot documentSnapshot = await _firestore
+        .collection('Disliked Videos')
+        .doc(widget.UIDs)
+        .get();
+    if (documentSnapshot.exists) {
+      dynamic data = documentSnapshot.data();
+      if (data != null) {
+        List<dynamic> posts = (data['UIDs'] as List?) ?? [];
+        setState(() {
+          dislikedusers =posts.map((post) => post.toString()).toList();
+        });
+      }
+      final user=_auth.currentUser;
+      if(dislikedusers.contains(user!.uid)){
+        setState(() {
+          isdisliked=true;
+        });
+      }
+      else{
+        setState(() {
+          isdisliked=false;
+        });
+      }
+    }
+    print('disliked users $dislikedusers');
+    print('disliked  searched$isdisliked');
   }
-  Future<void> dislikeduser() async{
-    final user=_auth.currentUser;
-    await _firestore.collection('Disliked Videos').doc(widget.VideoID).set({
-      'UIDs':FieldValue.arrayUnion([
-        user!.uid
-      ])
-    },SetOptions(merge: true));
-  }
+  List<String>likedusers=[];
+  bool isliked=false;
   Future<void> fetchlikedusers() async{
+    await fetchuid();
     DocumentSnapshot documentSnapshot = await _firestore
         .collection('Liked Videos')
-        .doc(widget.VideoID)
+        .doc(widget.UIDs)
         .get();
     if (documentSnapshot.exists) {
       dynamic data = documentSnapshot.data();
@@ -93,94 +221,32 @@ class _VideoPageState extends State<VideoPage> {
       }
     }
     print('liked users $likedusers');
-    print('liked $isliked');
+    print('liked searched $isliked');
   }
-  Future<void> fetchdislikedusers() async{
-    DocumentSnapshot documentSnapshot = await _firestore
-        .collection('Disliked Videos')
-        .doc(widget.VideoID)
-        .get();
-    if (documentSnapshot.exists) {
-      dynamic data = documentSnapshot.data();
-      if (data != null) {
-        List<dynamic> posts = (data['UIDs'] as List?) ?? [];
-        setState(() {
-          dislikedusers =posts.map((post) => post.toString()).toList();
-        });
-      }
-      final user=_auth.currentUser;
-      if(dislikedusers.contains(user!.uid)){
-        setState(() {
-          isdisliked=true;
-        });
-      }
-      else{
-        setState(() {
-          isdisliked=false;
-        });
-      }
-    }
-    print('liked users $dislikedusers');
-    print('disliked $isdisliked');
-  }
-  Future<void> subscribeuser()async{
+  Future<void> Likeduser() async{
     final user=_auth.currentUser;
-    await _firestore.collection('Subscribers').doc(widget.UID).set({
-      'Subscriber UIDs':FieldValue.arrayUnion([
+    await _firestore.collection('Liked Videos').doc(widget.UIDs).set({
+      'UIDs':FieldValue.arrayUnion([
         user!.uid
       ])
-    });
+    },SetOptions(merge:true));
   }
-  Future<void> unsubscribeuser()async{
+  Future<void> dislikeduser() async{
     final user=_auth.currentUser;
-    await _firestore.collection('Subscribers').doc(widget.UID).set({
-      'Subscriber UIDs':FieldValue.arrayRemove([
+    await _firestore.collection('Disliked Videos').doc(widget.UIDs).set({
+      'UIDs':FieldValue.arrayUnion([
         user!.uid
       ])
-    });
+    },SetOptions(merge: true));
   }
-  bool issubscribed=false;
-  Future<void> fetchsubscriber() async {
-    final user = _auth.currentUser;
-    try {
-      DocumentSnapshot documentSnapshot = await _firestore
-          .collection('Subscribers')
-          .doc(widget.UID)
-          .get();
-
-      if (documentSnapshot.exists) {
-        dynamic data = documentSnapshot.data();
-        if (data != null) {
-          List<dynamic> posts = (data['Subscriber UIDs'] as List?) ?? [];
-          setState(() {
-            subscriber =
-                posts.map((post) => post.toString()).toList();
-          });
-        }
-
-      }
-
-      print('following $subscriber');
-    } catch (e) {
-      print('Error fetching followers fetchfollowers: $e');
-    }
-    if(subscriber.contains(user!.uid)){
-      setState(() {
-        issubscribed=true;
-      });
-    }
-    else{
-      setState(() {
-        issubscribed=false;
-      });
-    }
-  }
+  double _sliderValue = 0.0; // Current value of the slider
+  Duration _duration = Duration();
   void fetchUserDataPeriodically() {
     // Fetch data initially
     fetchData();
 
     // Set up a timer to fetch data every 2 seconds
-    Timer.periodic(Duration(seconds: 2), (timer) {
+    Timer.periodic(Duration(milliseconds: 50), (timer) {
       fetchData();
     });
   }
@@ -188,41 +254,55 @@ class _VideoPageState extends State<VideoPage> {
     await fetchlikedusers();
     await fetchdislikedusers();
     await fetchsubscriber();
+    await fetchviews();
+    await fetchuploaddate();
   }
+  @override
   @override
   void initState() {
     super.initState();
-    fetchlikedusers();
-    fetchdislikedusers();
+    fetchthumbnail();
     fetchUserDataPeriodically();
+    fetchdislikedusers();
+    subscribeuser();
+    fetchprofilepictures();
+    fetchlikedusers();
+    fetchcaption();
+    fetchviews();
+    fetchuploaddate();
+    fetchuid();
     fetchsubscriber();
-    _controller = VideoPlayerController.network(
-      widget.viddeourl,
-    )..initialize().then((_) {
-      setState(() {
-        _duration = _controller.value.duration;
-      });
-      // Start timer to hide controls after 5 seconds
-      Timer(Duration(seconds: 5), () {
+    fetchusername();
+    fetchvideourl().then((_) {
+      // Initialize VideoPlayerController after fetching the video URL
+      _controller = VideoPlayerController.network(
+        videourl,
+      )..initialize().then((_) {
         setState(() {
-          _showControls = false;
+          _duration = _controller.value.duration;
+        });
+        // Start timer to hide controls after 5 seconds
+        Timer(Duration(seconds: 5), () {
+          setState(() {
+            _showControls = false;
+          });
+        });
+        // Start autoplay
+        _controller.play();
+      });
+      _currentPositionNotifier = ValueNotifier(Duration.zero);
+      _controller.addListener(() {
+        final position = _controller.value.position;
+        _currentPositionNotifier.value = position;
+        setState(() {
+          _sliderValue = position.inSeconds.toDouble();
+          _duration = _controller.value.duration;
         });
       });
-      // Start autoplay
-      _controller.play();
     });
-    _currentPositionNotifier = ValueNotifier(Duration.zero);
-    _controller.addListener(() {
-      final position = _controller.value.position;
-      _currentPositionNotifier.value = position;
-      setState(() {
-        _sliderValue = position.inSeconds.toDouble();
-        _duration = _controller.value.duration;
-      });
-    });
-
   }
 
+  bool _isFullscreen = false;
   @override
   Widget build(BuildContext context) {
     final user=_auth.currentUser;
@@ -261,12 +341,12 @@ class _VideoPageState extends State<VideoPage> {
                       top: 100,
                       right:180,
                       child:  CircularProgressIndicator(
-                      // Customize the circular progress indicator as needed
-                      strokeWidth: 5,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                    ),),
+                        // Customize the circular progress indicator as needed
+                        strokeWidth: 5,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),),
                   if(_controller.value.isCompleted)
-                    Image.network(widget.thumbnail),
+                    Image.network(thumbnail),
                   if (_showControls)
                     _isFullscreen? Positioned(
                       top: MediaQuery.of(context).size.height / 2 - 25,
@@ -345,8 +425,6 @@ class _VideoPageState extends State<VideoPage> {
                     ),
                   )
                       : SizedBox.shrink(),
-
-
                   // if (_showControls)
                   //   Positioned(
                   //     top: _isFullscreen ? MediaQuery.of(context).size.height - 80 : 180,
@@ -368,7 +446,7 @@ class _VideoPageState extends State<VideoPage> {
                   //   ),
                 ],
               ),
-            ):Image.network(widget.thumbnail,),
+            ):Image.network(thumbnail,),
             SizedBox(
               height: 20,
             ),
@@ -377,7 +455,7 @@ class _VideoPageState extends State<VideoPage> {
                 SizedBox(
                   width: 20,
                 ),
-                Text(widget.caption,style: GoogleFonts.arbutusSlab(color: Colors.white,fontWeight: FontWeight.bold,fontSize: 20),),
+                Text(caption,style: GoogleFonts.arbutusSlab(color: Colors.white,fontWeight: FontWeight.bold,fontSize: 20),),
               ],
             ),
             SizedBox(
@@ -388,17 +466,17 @@ class _VideoPageState extends State<VideoPage> {
                 SizedBox(
                   width: 20,
                 ),
-                if(widget.views==0)
+                if(views==0)
                   Text('No Views',style: TextStyle(color: Colors.grey,fontWeight: FontWeight.w300,fontSize: 13),),
-                if(widget.views==1)
-                  Text('${widget.views} view',style: TextStyle(color: Colors.grey,fontWeight: FontWeight.w300,fontSize: 13),),
-                if(widget.views>1)
-                  Text('${widget.views} views',style: TextStyle(color: Colors.grey,fontWeight: FontWeight.w300,fontSize: 13),),
+                if(views==1)
+                  Text('${views} view',style: TextStyle(color: Colors.grey,fontWeight: FontWeight.w300,fontSize: 13),),
+                if(views>1)
+                  Text('${views} views',style: TextStyle(color: Colors.grey,fontWeight: FontWeight.w300,fontSize: 13),),
                 SizedBox(
                   width: 20,
                 ),
                 Text(
-                  '${timeago.format(widget.uploaddate, locale: 'en_short', allowFromNow: true)} ago', // Format the upload date
+                  '${timeago.format(uploaddate, locale: 'en_short', allowFromNow: true)} ago', // Format the upload date
                   style: TextStyle(color: Colors.grey, fontSize: 13, fontWeight: FontWeight.w300),
                 ),
               ],
@@ -412,13 +490,25 @@ class _VideoPageState extends State<VideoPage> {
                 SizedBox(
                   width: 20,
                 ),
+                // InkWell(
+                //   onTap: (){
+                //     Navigator.push(context, MaterialPageRoute(builder: (context) => SearchedUser(UID: widget.UID),));
+                //   },
+                //   child: CircleAvatar(
+                //     radius: 20,
+                //     backgroundImage: NetworkImage(widget.profilepicurl),
+                //   ),
+                // ),
+                SizedBox(
+                  width: 20,
+                ),
                 InkWell(
                   onTap: (){
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => SearchedUser(UID: widget.UID),));
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => SearchedUser(UID: UID),));
                   },
                   child: CircleAvatar(
                     radius: 20,
-                    backgroundImage: NetworkImage(widget.profilepicurl),
+                    backgroundImage: NetworkImage(profileurl),
                   ),
                 ),
                 SizedBox(
@@ -429,9 +519,10 @@ class _VideoPageState extends State<VideoPage> {
                   children: [
                     InkWell(
                       onTap: (){
-                        Navigator.push(context, MaterialPageRoute(builder: (context) => SearchedUser(UID: widget.UID),));
+                        Navigator.push(context, MaterialPageRoute(builder: (context) => SearchedUser(UID: UID),));
+                        // Navigator.push(context, MaterialPageRoute(builder: (context) => SearchedUser(UID: widget.UID),));
                       },
-                      child: Text(widget.username,style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,
+                      child: Text(username,style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,
                           fontSize: 12),),
                     ),
                     if(subscriber.length<=1)
@@ -443,7 +534,7 @@ class _VideoPageState extends State<VideoPage> {
                 SizedBox(
                   width: 20,
                 ),
-                if(widget.UID!=user!.uid)
+                if(UID!=user!.uid)
                   Column(
                     children: [
                       if(issubscribed)
@@ -464,7 +555,7 @@ class _VideoPageState extends State<VideoPage> {
                             fetchsubscriber();
                           },
                               onLongPress: (){
-                            print('hi long press');
+                                print('hi long press');
                               },
                               style: ButtonStyle(
                                   backgroundColor: MaterialStatePropertyAll(Colors.white)
@@ -484,7 +575,7 @@ class _VideoPageState extends State<VideoPage> {
                 if(isliked)
                   IconButton(onPressed: ()async{
                     final user=_auth.currentUser;
-                    await _firestore.collection('Liked Videos').doc(widget.VideoID).set({
+                    await _firestore.collection('Liked Videos').doc(widget.UIDs).set({
                       'UIDs':FieldValue.arrayRemove([
                         user!.uid
                       ])
@@ -494,7 +585,7 @@ class _VideoPageState extends State<VideoPage> {
                 if(!isliked)
                   IconButton(onPressed: ()async{
                     final user=_auth.currentUser;
-                    await _firestore.collection('Disliked Videos').doc(widget.VideoID).set({
+                    await _firestore.collection('Disliked Videos').doc(widget.UIDs).set({
                       'UIDs':FieldValue.arrayRemove([
                         user!.uid
                       ])
@@ -508,7 +599,7 @@ class _VideoPageState extends State<VideoPage> {
                 if(isdisliked)
                   IconButton(onPressed: ()async{
                     final user=_auth.currentUser;
-                    await _firestore.collection('Disliked Videos').doc(widget.VideoID).set({
+                    await _firestore.collection('Disliked Videos').doc(widget.UIDs).set({
                       'UIDs':FieldValue.arrayRemove([
                         user!.uid
                       ])
@@ -519,7 +610,7 @@ class _VideoPageState extends State<VideoPage> {
                   IconButton(onPressed: ()async{
                     dislikeduser();
                     final user=_auth.currentUser;
-                    await _firestore.collection('Liked Videos').doc(widget.VideoID).set({
+                    await _firestore.collection('Liked Videos').doc(widget.UIDs).set({
                       'UIDs':FieldValue.arrayRemove([
                         user!.uid
                       ])
@@ -528,29 +619,11 @@ class _VideoPageState extends State<VideoPage> {
                   }, icon: Icon(CupertinoIcons.hand_thumbsdown,color: Colors.white,)),
               ],
             ),
-            SizedBox(
-              height: 20,
-            ),
           ],
         ),
       ),
     );
   }
-
-  void _toggleFullScreen() {
-    if (_isFullscreen) {
-      SystemChrome.setPreferredOrientations([
-        DeviceOrientation.landscapeLeft,
-        DeviceOrientation.landscapeRight,
-      ]);
-    } else {
-      SystemChrome.setPreferredOrientations([
-        DeviceOrientation.portraitUp,
-        DeviceOrientation.portraitDown,
-      ]);
-    }
-  }
-
   @override
   void dispose() {
     super.dispose();

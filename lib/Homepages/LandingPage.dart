@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:pixelprowess/Homepages/Accountpage.dart';
 import 'package:pixelprowess/Pages/searched_userpage.dart';
+import 'package:pixelprowess/Search%20Pages/Search_Page.dart';
 import 'package:pixelprowess/Video%20Card/VideoCard.dart';
 import 'package:timeago/timeago.dart'as timeago;
 import 'package:video_player/video_player.dart';
@@ -254,7 +255,9 @@ class _LandingPageState extends State<LandingPage> {
         actions: [
           Row(
             children: [
-              IconButton(onPressed: (){}, icon: AnimatedIcon(icon: AnimatedIcons.ellipsis_search, progress: kAlwaysCompleteAnimation,color: Colors.white,))
+              IconButton(onPressed: (){
+                Navigator.push(context, MaterialPageRoute(builder: (context) => SearchPage(),));
+              }, icon: AnimatedIcon(icon: AnimatedIcons.ellipsis_search, progress: kAlwaysCompleteAnimation,color: Colors.white,))
             ],
           )
         ],
@@ -338,7 +341,7 @@ class _LandingPageState extends State<LandingPage> {
                       SizedBox(
                         width: 10,
                       ),
-                      Text(captions[i],style: GoogleFonts.abhayaLibre(color: Colors.white,fontSize: 18),),
+                      Text(captions[i],style: GoogleFonts.arbutusSlab(color: Colors.white,fontSize: 15),),
                     ],
                   ),
                   SizedBox(
@@ -359,8 +362,13 @@ class _LandingPageState extends State<LandingPage> {
                         Text('No Views', style: TextStyle(color: Colors.grey,fontSize: 12)),
                       if (views[i] == 1)
                         Text('${views[i]} View', style: TextStyle(color: Colors.grey,fontSize: 12)),
-                      if (views[i] > 1)
+                      if (views[i] > 1 && views[i]<=999)
                         Text('${views[i]} Views', style: TextStyle(color: Colors.grey,fontSize: 12)),
+                      if (views[i] >= 10000 && views[i]<=100000)
+                        Text('${(views[i] ~/ 1000)}K Views', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                      if (views[i] > 100000 && views[i]<=9999999)
+                        Text('${(views[i] ~/ 10000)}M Views', style: TextStyle(color: Colors.grey, fontSize: 12)),
+
                       SizedBox(
                         width: 20,
                       ),
