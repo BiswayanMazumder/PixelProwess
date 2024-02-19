@@ -160,6 +160,13 @@ class _Searched_videoState extends State<Searched_video> {
         profileurl=docsnap.data()?['Profile Pic'];
       });
     }
+    else{
+      setState(() {
+        profileurl='https://img.freepik.com/free-vector/businessman-character-avatar-isolated_'
+            '24877-60111.jpg?w=740&t=st=1707932498~exp=1707933098~hmac=63fef39a600650c9d8f0c064778238717'
+            'd1a8298782da830e68ce7818054ed6f';
+      });
+    }
     print('profile pics $profileurl');
   }
   bool isdisliked=false;
@@ -264,7 +271,6 @@ class _Searched_videoState extends State<Searched_video> {
     fetchthumbnail();
     fetchUserDataPeriodically();
     fetchdislikedusers();
-    subscribeuser();
     fetchprofilepictures();
     fetchlikedusers();
     fetchcaption();

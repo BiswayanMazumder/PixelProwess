@@ -381,10 +381,6 @@ class _SearchedUserState extends State<SearchedUser> {
         backgroundColor: Colors.black,
         elevation: 0,
         actions: [
-          IconButton(onPressed: (){
-            _auth.signOut();
-            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomePage(),));
-          }, icon: Icon(Icons.logout,color: Colors.white,))
         ],
         title: Text(username,style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold),),
       ),

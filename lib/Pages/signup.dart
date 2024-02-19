@@ -5,6 +5,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:pixelprowess/firebase_options.dart';
+import 'package:pixelprowess/main.dart';
 class Signup extends StatefulWidget {
   const Signup({Key? key}) : super(key: key);
 
@@ -59,7 +60,7 @@ class _SignupState extends State<Signup> {
     final user=_auth.currentUser;
     try{
       await _auth.createUserWithEmailAndPassword(email: _emailcontroller.text.toString(), password: _password.text.toString());
-
+      Navigator.push(context, MaterialPageRoute(builder: (context) => HomePage(),));
     }catch(e){
       print('Error $e');
     }

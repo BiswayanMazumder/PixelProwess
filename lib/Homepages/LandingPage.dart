@@ -1,11 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:pixelprowess/Homepages/Accountpage.dart';
 import 'package:pixelprowess/Pages/searched_userpage.dart';
 import 'package:pixelprowess/Search%20Pages/Search_Page.dart';
 import 'package:pixelprowess/Video%20Card/VideoCard.dart';
+import 'package:shimmer_image/shimmer_image.dart';
 import 'package:timeago/timeago.dart'as timeago;
 import 'package:video_player/video_player.dart';
 
@@ -49,6 +50,7 @@ class _LandingPageState extends State<LandingPage> {
   }
   String thumbnails='';
   List<String> uploadeduseruid=[];
+  bool _loadedthumbnail=false;
   Future<void> fetchthumbnail() async {
     final user = _auth.currentUser;
     await fetchvideoid();
@@ -58,12 +60,14 @@ class _LandingPageState extends State<LandingPage> {
         setState(() {
           thumbnails=docsnap.data()?['Thumbnail Link'];
           thumbnail.add(thumbnails);
+          _loadedthumbnail=true;
         });
       }
     }
     print(' thumbnail homepage $thumbnail');
   }
   String Uploaduids='';
+  bool _loadeduseruid=false;
   Future<void> fetchuploadeduseruid() async {
     final user = _auth.currentUser;
     await fetchvideoid();
@@ -76,15 +80,30 @@ class _LandingPageState extends State<LandingPage> {
     }
     setState(() {
       uploadeduseruid = List.from(newUploadedUserIds); // Update uploadeduseruid with newUploadedUserIds
+      _loadeduseruid=true;
     });
     print(' UIDs homepage $uploadeduseruid');
   }
-
+  Future<void> fetchvideo() async {
+    await fetchvideoid();
+    List<String> newUploadedUserIds = [];
+    for(String vids in videoid){
+      final docsnap=await _firestore.collection('Global Post').doc(vids).get();
+      if(docsnap.exists){
+        newUploadedUserIds.add(docsnap.data()?['Video Link']);
+      }
+    }
+    setState(() {
+      videos=List.from(newUploadedUserIds);
+    });
+    print(' videos fetched db $videos , length ${videos.length}');
+  }
   int usernameIndex = 0;
   String _profileurl='';
   List<String>Profileurls=[];
   String usernames='';
   List<String> USernames=[];
+  bool loadedusernames=false;
   Future<void> fetchusernames() async {
     final user = _auth.currentUser;
     await fetchuploadeduseruid();
@@ -97,6 +116,7 @@ class _LandingPageState extends State<LandingPage> {
           setState(() {
             usernames = docsnap.data()?['Username'];
             newusernames.add(usernames); // Add the username to the new list
+            loadedusernames=true;
           });
         }
       }
@@ -108,7 +128,7 @@ class _LandingPageState extends State<LandingPage> {
     }
     print(' username homepage $USernames');
   }
-
+  bool _loadeddp=false;
   Future<void> fetchdp() async {
     final user = _auth.currentUser;
     await fetchuploadeduseruid();
@@ -119,12 +139,21 @@ class _LandingPageState extends State<LandingPage> {
         setState(() {
           _profileurl=docsnap.data()?['Profile Pic'];
           Profileurls.add(_profileurl);
+          _loadeddp=true;
+        });
+      }
+      else{
+        setState(() {
+          Profileurls.add('https://img.freepik.com/free-vector/businessman-character-avatar-isolated_'
+              '24877-60111.jpg?w=740&t=st=1707932498~exp=1707933098~hmac=63fef39a600650c9d8f0c064778238717'
+              'd1a8298782da830e68ce7818054ed6f');
         });
       }
     }
     print(' dp homepage $Profileurls');
   }
   String Caption='';
+  bool _loadedcaptions=false;
   Future<void> fetchcaptions() async {
     final user = _auth.currentUser;
     await fetchvideoid();
@@ -134,12 +163,14 @@ class _LandingPageState extends State<LandingPage> {
         setState(() {
           Caption=docsnap.data()?['Caption'];
           captions.add(Caption);
+          _loadedcaptions=true;
         });
       }
     }
     print(' captions homepage $captions');
   }
   DateTime Uploaddate = DateTime.now();
+  bool _loadeddatetime=false;
   Future<void> fetchuploaddate() async {
     await fetchvideoid();
     for (String vids in videoid) {
@@ -151,26 +182,16 @@ class _LandingPageState extends State<LandingPage> {
         setState(() {
           Uploaddate = uploadDateTime;
           uploaddate.add(Uploaddate);
+          _loadeddatetime=true;
         });
       }
     }
     print(' upload date homepage $uploaddate');
   }
   String Videolinks='';
-  Future<void> fetchvideo() async {
-    await fetchvideoid();
-    for(String vids in videoid){
-      final docsnap=await _firestore.collection('Global Post').doc(vids).get();
-      if(docsnap.exists){
-        setState(() {
-          Videolinks=docsnap.data()?['Video Link'];
-          videos.add(Videolinks);
-        });
-      }
-    }
-    print(' videos $videos');
-  }
+
   List<Duration> videoLengths = [];
+  bool _loadedvideolength=false;
   Future<void> fetchVideoLengths() async {
     await fetchvideo();
     for (int i = 0; i < videos.length; i++) {
@@ -179,6 +200,7 @@ class _LandingPageState extends State<LandingPage> {
         await controller.initialize();
         setState(() {
           videoLengths.add(controller.value.duration);
+          _loadedvideolength=true;
         });
         await controller.dispose();
       } catch (e) {
@@ -190,6 +212,7 @@ class _LandingPageState extends State<LandingPage> {
   int views_video=0;
   List<int> views=[];
   int fetchedviews=0;
+  bool _loadedviews=false;
   Future<void> fetchviews() async{
     await fetchvideoid();
     for (String vids in videoid) {
@@ -200,6 +223,7 @@ class _LandingPageState extends State<LandingPage> {
         setState(() {
           fetchedviews = fetchviews;
           views.add(fetchedviews);
+          _loadedviews=true;
         });
       }
     }
@@ -227,8 +251,24 @@ class _LandingPageState extends State<LandingPage> {
     } catch (e) {
       print('Error fetching followers fetchfollowers: $e');
     }
-
   }
+  bool _isVideoPlaying = false;
+  late List<VideoPlayerController> _videoControllers;
+  void _initializeVideoControllers() async {
+    await fetchvideo(); // Fetch the video URLs
+    _videoControllers = List.generate(
+      videos.length,
+          (index) => VideoPlayerController.network(videos[index]),
+    );
+    await Future.wait(_videoControllers.map((controller) => controller.initialize())); // Initialize controllers
+    setState(() {}); // Update the UI after initialization
+  }
+  void _disposeVideoControllers() {
+    for (var controller in _videoControllers) {
+      controller.dispose();
+    }
+  }
+
   @override
   void initState() {
     // TODO: implement initState
@@ -242,11 +282,16 @@ class _LandingPageState extends State<LandingPage> {
     fetchdp();
     fetchusernames();
     fetchvideo();
+    print('fetched video $videos, ${videos.length}');
     fetchsubscriber();
     // fetchusernames();
+    fetchVideoLengths();
+    _initializeVideoControllers();
   }
+
   @override
   Widget build(BuildContext context) {
+    int _currentTappedIndex = -1;
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
@@ -275,7 +320,8 @@ class _LandingPageState extends State<LandingPage> {
         ),
       ),
       body: SingleChildScrollView(
-        child: Column(
+        child: _loadeddatetime && _loadedviews &&_loadedviews &&_loadedcaptions &&_loadedthumbnail
+            &&_loadeduseruid &&loadedusernames &&_loadeddp?Column(
           children: [
             for(int i=0;i<captions.length;i++)
               Column(
@@ -285,8 +331,11 @@ class _LandingPageState extends State<LandingPage> {
                   ),
                   Stack(
                     children: [
-                      InkWell(
+                     InkWell(
+
                           onTap: ()async{
+
+                            print(' clicked $i and Video fetched ${videos[i]}');
                             Navigator.push(context, MaterialPageRoute(builder: (context) => VideoPage(caption: captions[i],
                                 uploaddate: uploaddate[i],
                                 Index: i,
@@ -313,12 +362,30 @@ class _LandingPageState extends State<LandingPage> {
                                     color: Colors.white
                                 )
                             ),
-                            child: Image.network(
-                              thumbnail[i],
+                            child: ProgressiveImage(
+                              height: 300,
+                              width: 1280,
+                              baseColor: Colors.grey.shade900,
+                              highlightColor: Colors.red,
+                              imageError: 'Failed To Load Image',
+                              image: thumbnail[i],
                             ),
                           )
                       ),
-
+                      // if(videoLengths.isNotEmpty)
+                      //   Positioned(
+                      //     bottom: 5,
+                      //     right: 5,
+                      //     child: Text(
+                      //       '${videoLengths[i].toString().split('.').first}',
+                      //       // Converts Duration to string and removes milliseconds
+                      //       style: TextStyle(
+                      //         color: Colors.white,
+                      //         fontSize: 12,
+                      //         fontWeight: FontWeight.bold,
+                      //       ),
+                      //     ),
+                      //   ),
                     ],
                   ),
                   SizedBox(
@@ -341,7 +408,20 @@ class _LandingPageState extends State<LandingPage> {
                       SizedBox(
                         width: 10,
                       ),
-                      Text(captions[i],style: GoogleFonts.arbutusSlab(color: Colors.white,fontSize: 15),),
+                      InkWell(
+                          onTap: (){
+                            Navigator.push(context, MaterialPageRoute(builder: (context) => VideoPage(caption: captions[i],
+                                uploaddate: uploaddate[i],
+                                Index: i,
+                                VideoID:  videoid[i],
+                                viddeourl: videos[i],
+                                views: views[i],
+                                thumbnail: thumbnail[i],
+                                username: USernames[i],
+                                UID: uploadeduseruid[i],
+                                profilepicurl: Profileurls[i]),));
+                          },
+                          child: Text(captions[i],style: GoogleFonts.arbutusSlab(color: Colors.white,fontSize: 15),)),
                     ],
                   ),
                   SizedBox(
@@ -354,7 +434,11 @@ class _LandingPageState extends State<LandingPage> {
                       ),
                       //[Biswayan Mazumder, Biswayan Mazumder, Biswayan Mazumder, CodeZify-Flutter Developer , CodeZify-Flutter Developer , CodeZify-Flutter Developer , Biswayan Mazumder]
                       //[0LrVRSIKdRVgAWWVt9Qhv8PguJG3, 0LrVRSIKdRVgAWWVt9Qhv8PguJG3, 0LrVRSIKdRVgAWWVt9Qhv8PguJG3, h0YLztPREjeQeV2ELA9iFu0qGNa2, h0YLztPREjeQeV2ELA9iFu0qGNa2, h0YLztPREjeQeV2ELA9iFu0qGNa2, 0LrVRSIKdRVgAWWVt9Qhv8PguJG3]
-                      Text('${USernames[i]}', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                      InkWell(
+                          onTap: (){
+                            Navigator.push(context, MaterialPageRoute(builder: (context) => SearchedUser(UID: uploadeduseruid[i]),));
+                          },
+                          child: Text('${USernames[i]}', style: TextStyle(color: Colors.grey, fontSize: 12))),
                       SizedBox(
                         width: 20,
                       ),
@@ -387,8 +471,21 @@ class _LandingPageState extends State<LandingPage> {
               height: 20,
             ),
           ],
-        ),
+        ):Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(
+              backgroundColor: Colors.white,
+            ),
+          ],
+        )
       ),
     );
+  }
+  @override
+  void dispose() {
+    _disposeVideoControllers();
+    super.dispose();
   }
 }

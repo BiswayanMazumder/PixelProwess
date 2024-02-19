@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:pixelprowess/Pages/test_video_if.dart';
 import 'package:pixelprowess/Pages/upload_page.dart';
 import 'package:pixelprowess/Video%20Card/VideoCard.dart';
 import 'package:pixelprowess/main.dart';
+import 'package:shimmer_image/shimmer_image.dart';
 import 'package:timeago/timeago.dart'as timeago;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -207,6 +209,7 @@ class _AccountpageState extends State<Accountpage> {
 
   }
   String thumbnails='';
+  bool _loadedthumbnail=false;
   Future<void> fetchthumbnail() async {
     final user = _auth.currentUser;
     await fetchvideoid();
@@ -216,12 +219,14 @@ class _AccountpageState extends State<Accountpage> {
         setState(() {
           thumbnails=docsnap.data()?['Thumbnail Link'];
           thumbnail.add(thumbnails);
+          _loadedthumbnail=true;
         });
       }
     }
     print(' thumbnail $thumbnail');
   }
   String Caption='';
+  bool _loadedcaption=false;
   Future<void> fetchcaptions() async {
     final user = _auth.currentUser;
     await fetchvideoid();
@@ -231,6 +236,7 @@ class _AccountpageState extends State<Accountpage> {
         setState(() {
           Caption=docsnap.data()?['Caption'];
           captions.add(Caption);
+          _loadedcaption=true;
         });
       }
     }
@@ -252,6 +258,7 @@ class _AccountpageState extends State<Accountpage> {
     print(' videos $videos');
   }
   DateTime Uploaddate = DateTime.now();
+  bool _loadeduploaddate=false;
   Future<void> fetchuploaddate() async {
     await fetchvideoid();
     for (String vids in videoid) {
@@ -263,6 +270,7 @@ class _AccountpageState extends State<Accountpage> {
         setState(() {
           Uploaddate = uploadDateTime;
           uploaddate.add(Uploaddate);
+
         });
       }
     }
@@ -340,13 +348,7 @@ class _AccountpageState extends State<Accountpage> {
         automaticallyImplyLeading: false,
         backgroundColor: Colors.black,
         elevation: 0,
-        actions: [
-          IconButton(onPressed: (){
-            _auth.signOut();
-            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomePage(),));
-          }, icon: Icon(Icons.logout,color: Colors.white,))
-        ],
-        title: Text(username,style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold),),
+        title: Text(username,style: GoogleFonts.arbutusSlab(color: Colors.white,fontWeight: FontWeight.bold),),
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -551,10 +553,13 @@ class _AccountpageState extends State<Accountpage> {
                               ),));
                               print('index $i');
                             },
-                            child: Image.network(
-                              thumbnail[i],
+                            child: ProgressiveImage(
                               height: 150,
                               width: 150,
+                              baseColor: Colors.grey.shade900,
+                              highlightColor: Colors.white,
+                              imageError: 'Failed To Load Image',
+                              image: thumbnail[i],
                             ),
                           ),
                           // Positioned(

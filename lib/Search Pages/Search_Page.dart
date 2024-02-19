@@ -74,7 +74,7 @@ class _SearchPageState extends State<SearchPage> {
                       },
                       child:Text(
                         (snapshot.data! as dynamic).docs[index]['Caption'],
-                        style: TextStyle(color: Colors.white),
+                        style: TextStyle(color: Colors.white,),
                       ),
                     ),
                 ),

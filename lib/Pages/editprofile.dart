@@ -7,7 +7,9 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:pixelprowess/main.dart';
 class EditProfile extends StatefulWidget {
   const EditProfile({Key? key}) : super(key: key);
 
@@ -312,10 +314,12 @@ class _EditProfileState extends State<EditProfile> {
                 hintText: username,
                   suffixIcon: IconButton(onPressed: ()async{
                     final user=_auth.currentUser;
-                    await _firestore.collection('User Details').doc(user!.uid).update(
-                        {
-                          'Username':_nameController.text
-                        });
+                    if(_nameController.text.isNotEmpty){
+                      await _firestore.collection('User Details').doc(user!.uid).update(
+                          {
+                            'Username':_nameController.text
+                          });
+                    }
                   }, icon: Icon(Icons.check,color: Colors.black,))
                 ),
               ),
@@ -376,10 +380,12 @@ class _EditProfileState extends State<EditProfile> {
                     hintText: userbio,
                     suffixIcon: IconButton(onPressed: ()async{
                       final user=_auth.currentUser;
-                      await _firestore.collection('User Details').doc(user!.uid).update(
-                          {
-                            'Bio':_bioController.text
-                          });
+                      if(_bioController.text.isNotEmpty){
+                        await _firestore.collection('User Details').doc(user!.uid).update(
+                            {
+                              'Bio':_bioController.text
+                            });
+                      }
                     }, icon: Icon(Icons.check,color: Colors.black,))
                 ),
               ),
@@ -427,9 +433,21 @@ class _EditProfileState extends State<EditProfile> {
                 ),
                 SizedBox(
                   width: 20,
-                )
+                ),
+
               ],
             ),
+            SizedBox(
+              height: 20,
+            ),
+            Center(
+              child: TextButton(onPressed: (){
+                _auth.signOut();
+                Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomePage(),));
+              }, child: Text('Log Out',style: GoogleFonts.abrilFatface(color: Colors.red,
+                  fontWeight: FontWeight.bold,fontSize: 18
+              ),)),
+            )
           ],
         ),
       ),
