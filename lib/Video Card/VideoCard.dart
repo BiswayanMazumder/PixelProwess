@@ -9,6 +9,8 @@ import 'package:pixelprowess/Pages/searched_userpage.dart';
 import 'package:shimmer_image/shimmer_image.dart';
 import 'package:video_player/video_player.dart';
 import 'package:timeago/timeago.dart'as timeago;
+import 'package:translator/translator.dart';
+import 'package:http/http.dart' as http;
 import 'package:like_button/like_button.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 class VideoPage extends StatefulWidget {
@@ -131,13 +133,23 @@ class _VideoPageState extends State<VideoPage> {
       'Subscriber UIDs':FieldValue.arrayUnion([
         user!.uid
       ])
-    });
+    },SetOptions(merge: true));
+    await _firestore.collection('Subscriptions').doc(user!.uid).set({
+      'Subscriber UIDs':FieldValue.arrayUnion([
+        widget.UID
+      ])
+    },SetOptions(merge: true));
   }
   Future<void> unsubscribeuser()async{
     final user=_auth.currentUser;
-    await _firestore.collection('Subscribers').doc(widget.UID).set({
+    await _firestore.collection('Subscribers').doc(widget.UID).update({
       'Subscriber UIDs':FieldValue.arrayRemove([
         user!.uid
+      ])
+    });
+    await _firestore.collection('Subscriptions').doc(user!.uid).update({
+      'Subscriber UIDs':FieldValue.arrayRemove([
+        widget.UID
       ])
     });
   }
@@ -175,6 +187,36 @@ class _VideoPageState extends State<VideoPage> {
       setState(() {
         issubscribed=false;
       });
+    }
+  }
+  List<String> videourls=[];
+  bool issaved=false;
+  Future<void> fetchvideourls() async {
+    final user = _auth.currentUser;
+    try {
+      DocumentSnapshot documentSnapshot = await _firestore
+          .collection('Users Saved Videos')
+          .doc(user!.uid)
+          .get();
+
+      if (documentSnapshot.exists) {
+        dynamic data = documentSnapshot.data();
+        if (data != null) {
+          List<dynamic> posts = (data['Saved Video Details'] as List?) ?? [];
+          setState(() {
+            videourls =posts.map((post) => post['Video Link'].toString()).toList();
+          });
+        }
+      }
+      if(videourls.contains(widget.viddeourl)){
+        setState(() {
+          issaved=true;
+        });
+      }
+      print('saved homepage $videourls');
+      print('saved video $issaved');
+    } catch (e) {
+      print('Error fetching followers videos: $e');
     }
   }
   void fetchUserDataPeriodically() {
@@ -426,6 +468,7 @@ class _VideoPageState extends State<VideoPage> {
   }
   Future<void> fetchData() async {
     await fetchlikedusers();
+    await fetchvideourls();
     await fetchdislikedusers();
     await fetchsubscriber();
   }
@@ -439,6 +482,7 @@ class _VideoPageState extends State<VideoPage> {
     fetchuploaddate();
     fetchviews();
     fetchuploadeduseruid();
+    fetchvideourls();
     fetchdp();
     fetchusernames();
     fetchvideo();
@@ -654,7 +698,7 @@ class _VideoPageState extends State<VideoPage> {
                   width: 20,
                 ),
                 Text(
-                  '${timeago.format(widget.uploaddate, locale: 'en_short', allowFromNow: true)} ago', // Format the upload date
+                  'Uploaded ${timeago.format(widget.uploaddate, locale: 'en_long', allowFromNow: true)}', // Format the upload date
                   style: TextStyle(color: Colors.grey, fontSize: 13, fontWeight: FontWeight.w300),
                 ),
               ],
@@ -799,9 +843,47 @@ class _VideoPageState extends State<VideoPage> {
                       ],
                     ),
                   ),
+                  SizedBox(
+                    width: 20,
+                  ),
+                  if(!issaved)
+                    IconButton(onPressed: ()async{
+                      await _firestore.collection('Users Saved Videos').doc(user!.uid).set(
+                          {
+                            'Saved Video Details':FieldValue.arrayUnion([
+                              {
+                                'Thumbnail': widget.thumbnail,
+                                'Video Link':widget.viddeourl,
+                                'User ID':widget.UID,
+                                'Profile Picture':widget.profilepicurl,
+                                'Username':widget.username,
+                                'Video ID':widget.VideoID,
+                              }
+                            ])
+                          },SetOptions(merge: true));
+                    }, icon: Icon(Icons.watch_later,color: Colors.white,)),
+                  if(issaved)
+                    IconButton(onPressed: ()async{
+                      await _firestore.collection('Users Saved Videos').doc(user!.uid).update(
+                          {
+                            'Saved Video Details':FieldValue.arrayRemove([
+                              {
+                                'Thumbnail': widget.thumbnail,
+                                'Video Link':widget.viddeourl,
+                                'User ID':widget.UID,
+                                'Profile Picture':widget.profilepicurl,
+                                'Username':widget.username,
+                              }
+                            ])
+                          });
+                      setState(() {
+                        issaved=false;
+                      });
+                    }, icon: Icon(Icons.delete_rounded,color: Colors.red,)),
                 ],
               ),
             ),
+
             SizedBox(
               height: 20,
             ),
@@ -918,7 +1000,7 @@ class _VideoPageState extends State<VideoPage> {
                         width: 20,
                       ),
                       Text(
-                        timeago.format(uploaddate[i], locale: 'en_short', allowFromNow: true), // Format the upload date
+                        timeago.format(uploaddate[i], locale: 'en_long', allowFromNow: true), // Format the upload date
                         style: TextStyle(color: Colors.grey,fontSize: 12),
                       ),
                     ],

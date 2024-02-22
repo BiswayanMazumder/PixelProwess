@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:pixelprowess/Pages/test_video_if.dart';
 import 'package:pixelprowess/Pages/upload_page.dart';
+import 'package:pixelprowess/Saved_videos/Watch_later.dart';
 import 'package:pixelprowess/Video%20Card/VideoCard.dart';
 import 'package:pixelprowess/main.dart';
 import 'package:shimmer_image/shimmer_image.dart';
@@ -348,6 +349,52 @@ class _AccountpageState extends State<Accountpage> {
         automaticallyImplyLeading: false,
         backgroundColor: Colors.black,
         elevation: 0,
+        actions: [
+          Row(
+            children: [
+              IconButton(onPressed: (){
+                showDialog(context: context, builder: (context) {
+                  return AlertDialog(
+                    backgroundColor: Colors.grey.withOpacity(0.8),
+                    title: Center(
+                      child: Text('More Options',style: GoogleFonts.arbutusSlab(color: Colors.white,
+                      fontSize: 15
+                      ),),
+                    ),
+                    scrollable: true,
+                    actions: [
+                      Center(
+                        child: Column(
+                          children: [
+                            InkWell(
+                              onTap:(){
+                                Navigator.pop(context);
+                                Navigator.push(context, MaterialPageRoute(builder: (context) => Watch_Later(),));
+                              },
+                              child: Text('Watch Later',style: GoogleFonts.abrilFatface(color: Colors.white,
+                                  fontWeight: FontWeight.w300),),
+                            ),
+                            SizedBox(
+                              height: 20,
+                            ),
+                            InkWell(
+                              onTap:(){
+                                Navigator.pop(context);
+                                Navigator.push(context, MaterialPageRoute(builder: (context) => EditProfile(),));
+                              },
+                              child: Text('Edit Profile',style: GoogleFonts.abrilFatface(color: Colors.white,
+                                  fontWeight: FontWeight.w300),),
+                            )
+                          ],
+                        ),
+                      )
+                    ],
+                  );
+                },);
+              }, icon: Icon(Icons.more_vert,color: Colors.white,))
+            ],
+          )
+        ],
         title: Text(username,style: GoogleFonts.arbutusSlab(color: Colors.white,fontWeight: FontWeight.bold),),
       ),
       body: SingleChildScrollView(
@@ -640,14 +687,18 @@ class _AccountpageState extends State<Accountpage> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 if (views[i] == 0)
-                                  Text('No Views', style: TextStyle(color: Colors.grey)),
+                                  Text('No Views', style: TextStyle(color: Colors.grey,fontSize: 12)),
                                 if (views[i] == 1)
-                                  Text('${views[i]} View', style: TextStyle(color: Colors.grey)),
-                                if (views[i] > 1)
-                                  Text('${views[i]} Views', style: TextStyle(color: Colors.grey)),
+                                  Text('${views[i]} View', style: TextStyle(color: Colors.grey,fontSize: 12)),
+                                if (views[i] > 1 && views[i]<=999)
+                                  Text('${views[i]} Views', style: TextStyle(color: Colors.grey,fontSize: 12)),
+                                if (views[i] >= 10000 && views[i]<=100000)
+                                  Text('${(views[i] ~/ 1000)}K Views', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                                if (views[i] > 100000 && views[i]<=9999999)
+                                  Text('${(views[i] ~/ 10000)}M Views', style: TextStyle(color: Colors.grey, fontSize: 12)),
                                 SizedBox(width: 10),
                                 Text(
-                                  timeago.format(uploaddate[i], locale: 'en_short', allowFromNow: true), // Format the upload date
+                                  timeago.format(uploaddate[i], locale: 'en_long', allowFromNow: true), // Format the upload date
                                   style: TextStyle(color: Colors.grey),
                                 ),
                               ],

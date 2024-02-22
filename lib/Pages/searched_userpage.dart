@@ -168,13 +168,23 @@ class _SearchedUserState extends State<SearchedUser> {
       'Subscriber UIDs':FieldValue.arrayUnion([
         user!.uid
       ])
-    });
+    },SetOptions(merge: true));
+    await _firestore.collection('Subscriptions').doc(user!.uid).set({
+      'Subscriber UIDs':FieldValue.arrayUnion([
+        widget.UID
+      ])
+    },SetOptions(merge: true));
   }
   Future<void> unsubscribeuser()async{
     final user=_auth.currentUser;
-    await _firestore.collection('Subscribers').doc(widget.UID).set({
+    await _firestore.collection('Subscribers').doc(widget.UID).update({
       'Subscriber UIDs':FieldValue.arrayRemove([
         user!.uid
+      ])
+    });
+    await _firestore.collection('Subscriptions').doc(user!.uid).update({
+      'Subscriber UIDs':FieldValue.arrayRemove([
+        widget.UID
       ])
     });
   }

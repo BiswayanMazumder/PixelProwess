@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:math';
+import 'package:dotted_border/dotted_border.dart';
 import 'package:http/http.dart' as http;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -287,6 +288,7 @@ class _Upload_PageState extends State<Upload_Page> {
               if(_mediaFile!=null &&_image!=null &&_title.text!=null){
                 setState(() {
                   _startedposting=true;
+                  _upload=false;
                 });
                 await generateUniqueRandomNumber();
                 Center(
@@ -330,13 +332,22 @@ class _Upload_PageState extends State<Upload_Page> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
-                  'Video to be uploaded',
-                  style: TextStyle(
-                      color: CupertinoColors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 20),
-                ),
+                if(!_uploading)
+                  Text(
+                    'Video ready to be uploaded',
+                    style: TextStyle(
+                        color: CupertinoColors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20),
+                  ),
+                if(_uploading)
+                  Text(
+                    'Upload Video',
+                    style: TextStyle(
+                        color: CupertinoColors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20),
+                  ),
               ],
             ),
             SizedBox(
@@ -351,39 +362,50 @@ class _Upload_PageState extends State<Upload_Page> {
             SizedBox(
               height: 20,
             ),
-            Container(
-              height: 300,
-              width: 200,
-              color: Colors.black,
-              child: _uploading
-                  ? IconButton(
-                onPressed: () {
-                  _pickMedia();
-                },
-                icon:
-                Icon(Icons.upload, color: CupertinoColors.white),
-              )
-                  : _mediaFile != null
-                  ? _videoController != null
-                  ? AspectRatio(
-                aspectRatio:
-                _videoController!.value.aspectRatio,
-                child: VideoPlayer(_videoController!),
-              )
-                  : Container(
-                width: 50,
-                height: 50,
-                decoration: BoxDecoration(
-                  shape: BoxShape.rectangle,
-                  image: isImage
-                      ? DecorationImage(
-                    image: FileImage(_mediaFile!),
-                    fit: BoxFit.cover,
-                  )
-                      : null,
-                ),
-              )
-                  : Container(),
+            DottedBorder(
+                borderType: BorderType.RRect,
+                radius: Radius.circular(8),
+                color: Colors.white,
+                dashPattern: [10,4],
+                strokeCap: StrokeCap.round,
+                child: Container(
+                  width: double.infinity,
+                  height: 200,
+                  child: Container(
+                    height: 200,
+                    width: double.infinity,
+                    color: Colors.grey.withOpacity(0.3),
+                    child: _uploading
+                        ? IconButton(
+                      onPressed: () {
+                        _pickMedia();
+                      },
+                      icon:
+                      Icon(Icons.upload, color: CupertinoColors.white),
+                    )
+                        : _mediaFile != null
+                        ? _videoController != null
+                        ? AspectRatio(
+                      aspectRatio:
+                      _videoController!.value.aspectRatio,
+                      child: VideoPlayer(_videoController!),
+                    )
+                        : Container(
+                      width: 50,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.rectangle,
+                        image: isImage
+                            ? DecorationImage(
+                          image: FileImage(_mediaFile!),
+                          fit: BoxFit.cover,
+                        )
+                            : null,
+                      ),
+                    )
+                        : Container(),
+                  ),
+                )
             ),
             SizedBox(
               height: 20,
@@ -391,13 +413,22 @@ class _Upload_PageState extends State<Upload_Page> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
-                  'Thumbnail Selected',
-                  style: TextStyle(
-                      color: CupertinoColors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 20),
-                ),
+                if(!_upload)
+                  Text(
+                    'Thumbnail Selected',
+                    style: TextStyle(
+                        color: CupertinoColors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20),
+                  ),
+                if(_upload)
+                  Text(
+                    'Select Thumbnail',
+                    style: TextStyle(
+                        color: CupertinoColors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20),
+                  ),
               ],
             ),
             SizedBox(
@@ -412,38 +443,45 @@ class _Upload_PageState extends State<Upload_Page> {
             SizedBox(
               height: 20,
             ),
-            Container(
-              height: 300,
-              width: 900,
-              color: Colors.black,
-              child: _upload
-                  ? IconButton(
-                onPressed: _pickImage,
-                icon: Icon(Icons.upload, color: CupertinoColors.white),
-              )
-                  : _image != null
-                  ? Container(
-                width: 900,
-                height: 300,
-                decoration: BoxDecoration(
-                  shape: BoxShape.rectangle,
-                  image: DecorationImage(
-                    image: FileImage(_image!),
-                    fit: BoxFit.cover,
+            DottedBorder(
+              borderType: BorderType.RRect,
+              radius: Radius.circular(8),
+              color: Colors.white,
+              dashPattern: [10,4],
+              strokeCap: StrokeCap.round,
+              child: Container(
+                width: double.infinity,
+                height: 200,
+                color:Colors.grey.withOpacity(0.3),
+                child: _upload
+                    ? IconButton(
+                  onPressed: _pickImage,
+                  icon: Icon(Icons.upload, color: CupertinoColors.white),
+                )
+                    : _image != null
+                    ? Container(
+                  width: double.infinity,
+                  height: 200,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.rectangle,
+                    image: DecorationImage(
+                      image: FileImage(_image!),
+                      fit: BoxFit.fitWidth,
+                    ),
                   ),
-                ),
-                child: IconButton(
-                  onPressed: () {
-                    setState(() {
-                      _upload = true;
-                      _image = null;
-                    });
-                  },
-                  icon: Icon(CupertinoIcons.clear,
-                      color: Colors.white),
-                ),
+                  child: IconButton(
+                    onPressed: () {
+                      setState(() {
+                        _upload = true;
+                        _image = null;
+                      });
+                    },
+                    icon: Icon(CupertinoIcons.clear,
+                        color: Colors.black),
+                  ),
+                )
+                    : Container(),
               )
-                  : Container(),
             ),
             SizedBox(
               height: 20,
@@ -523,11 +561,11 @@ class _Upload_PageState extends State<Upload_Page> {
             SizedBox(
               height: 20,
             ),
-            _uploading?Container()
-            :Text(
-              'Upload Progress: ${_uploadProgress.toStringAsFixed(1)}%',
-              style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontSize: 15),
-            ),
+          _startedposting?Text(
+            'Upload Progress: ${_uploadProgress.toStringAsFixed(1)}%',
+            style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontSize: 15),
+          )
+            :Container(),
             SizedBox(
               height: 80,
             ),

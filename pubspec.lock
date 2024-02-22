@@ -17,6 +17,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.3.3"
+  animated_hint_textfield:
+    dependency: "direct main"
+    description:
+      name: animated_hint_textfield
+      sha256: "95893b104ccf5e1921d94085b077aaf44ed1ecff557057cc9aa9226b4956ef28"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.1"
+  animated_text_kit:
+    dependency: transitive
+    description:
+      name: animated_text_kit
+      sha256: "37392a5376c9a1a503b02463c38bc0342ef814ddbb8f9977bc90f2a84b22fa92"
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.2.2"
   async:
     dependency: transitive
     description:
@@ -113,6 +129,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.6"
+  dotted_border:
+    dependency: "direct main"
+    description:
+      name: dotted_border
+      sha256: "108837e11848ca776c53b30bc870086f84b62ed6e01c503ed976e8f8c7df9c04"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.1.0"
   fake_async:
     dependency: transitive
     description:
@@ -129,6 +153,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.0"
+  file:
+    dependency: transitive
+    description:
+      name: file
+      sha256: "5fc22d7c25582e38ad9a8515372cd9a93834027aacf1801cf01164dac0ffa08c"
+      url: "https://pub.dev"
+    source: hosted
+    version: "7.0.0"
   file_selector_linux:
     dependency: transitive
     description:
@@ -262,6 +294,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.17"
+  flutter_rating_bar:
+    dependency: transitive
+    description:
+      name: flutter_rating_bar
+      sha256: d2af03469eac832c591a1eba47c91ecc871fe5708e69967073c043b2d775ed93
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.0.1"
   flutter_snake_navigationbar:
     dependency: "direct main"
     description:
@@ -288,6 +328,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "6.1.0"
+  google_gemini:
+    dependency: "direct main"
+    description:
+      name: google_gemini
+      sha256: a99e14ba2d497ec8e2b4c83e483204709a4ce3ec6c0a6021b3c4a9b2cd671150
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.1.2"
   google_nav_bar:
     dependency: "direct main"
     description:
@@ -416,6 +464,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.1"
+  liquid_pull_to_refresh:
+    dependency: "direct main"
+    description:
+      name: liquid_pull_to_refresh
+      sha256: "11e4cd8c5460085a31b479ec4e1cd063eb8e599f35684d57a44dafa1fd1f67f3"
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.0.1"
   matcher:
     dependency: transitive
     description:
@@ -448,6 +504,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.5"
+  nested:
+    dependency: transitive
+    description:
+      name: nested
+      sha256: "03bac4c528c64c95c722ec99280375a6f2fc708eec17c7b3f07253b626cd2a20"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.0"
+  overflow_text_animated:
+    dependency: "direct main"
+    description:
+      name: overflow_text_animated
+      sha256: "9ac5935eec58785f8d1ee29d82d73c9631c6b6c850fec1614a5ab29417d854ba"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.6"
   path:
     dependency: transitive
     description:
@@ -456,6 +528,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.8.3"
+  path_drawing:
+    dependency: transitive
+    description:
+      name: path_drawing
+      sha256: bbb1934c0cbb03091af082a6389ca2080345291ef07a5fa6d6e078ba8682f977
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.1"
+  path_parsing:
+    dependency: transitive
+    description:
+      name: path_parsing
+      sha256: e3e67b1629e6f7e8100b367d3db6ba6af4b1f0bb80f64db18ef1fbabd2fa9ccf
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.1"
   path_provider:
     dependency: transitive
     description:
@@ -520,6 +608,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.8"
+  provider:
+    dependency: "direct main"
+    description:
+      name: provider
+      sha256: "9a96a0a19b594dbc5bf0f1f27d2bc67d5f95957359b461cd9feb44ed6ae75096"
+      url: "https://pub.dev"
+    source: hosted
+    version: "6.1.1"
+  rate_my_app:
+    dependency: "direct main"
+    description:
+      name: rate_my_app
+      sha256: e448dc27f8e821824fe7f67c2dba22f67b18de08054efa746defd1cd1657d882
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.0"
   reflection_effect:
     dependency: "direct main"
     description:
@@ -528,6 +632,62 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.0"
+  shared_preferences:
+    dependency: transitive
+    description:
+      name: shared_preferences
+      sha256: "81429e4481e1ccfb51ede496e916348668fd0921627779233bd24cc3ff6abd02"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.2.2"
+  shared_preferences_android:
+    dependency: transitive
+    description:
+      name: shared_preferences_android
+      sha256: "8568a389334b6e83415b6aae55378e158fbc2314e074983362d20c562780fb06"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.2.1"
+  shared_preferences_foundation:
+    dependency: transitive
+    description:
+      name: shared_preferences_foundation
+      sha256: "7708d83064f38060c7b39db12aefe449cb8cdc031d6062280087bc4cdb988f5c"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.3.5"
+  shared_preferences_linux:
+    dependency: transitive
+    description:
+      name: shared_preferences_linux
+      sha256: "9f2cbcf46d4270ea8be39fa156d86379077c8a5228d9dfdb1164ae0bb93f1faa"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.3.2"
+  shared_preferences_platform_interface:
+    dependency: transitive
+    description:
+      name: shared_preferences_platform_interface
+      sha256: "22e2ecac9419b4246d7c22bfbbda589e3acf5c0351137d87dd2939d984d37c3b"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.3.2"
+  shared_preferences_web:
+    dependency: transitive
+    description:
+      name: shared_preferences_web
+      sha256: "7b15ffb9387ea3e237bb7a66b8a23d2147663d391cafc5c8f37b2e7b4bde5d21"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.2.2"
+  shared_preferences_windows:
+    dependency: transitive
+    description:
+      name: shared_preferences_windows
+      sha256: "841ad54f3c8381c480d0c9b508b89a34036f512482c407e6df7a9c4aa2ef8f59"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.3.2"
   shimmer:
     dependency: transitive
     description:
@@ -605,6 +765,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.6.1"
+  translator:
+    dependency: "direct main"
+    description:
+      name: translator
+      sha256: "03521d194365e758c66444a3b03005733e1daf0cd3de9c63257bf82b1a4e2ba1"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.0"
   typed_data:
     dependency: transitive
     description:

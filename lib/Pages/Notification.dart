@@ -2,16 +2,17 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:pixelprowess/Pages/searched_userpage.dart';
-class Subscription_Page extends StatefulWidget {
-  const Subscription_Page({Key? key}) : super(key: key);
+import 'package:google_fonts/google_fonts.dart';
+class Notification_Page extends StatefulWidget {
+  const Notification_Page({Key? key}) : super(key: key);
 
   @override
-  State<Subscription_Page> createState() => _Subscription_PageState();
+  State<Notification_Page> createState() => _Notification_PageState();
 }
 
-class _Subscription_PageState extends State<Subscription_Page> {
+class _Notification_PageState extends State<Notification_Page> {
   FirebaseAuth _auth=FirebaseAuth.instance;
   FirebaseFirestore _firestore=FirebaseFirestore.instance;
   List<String> subscriber=[];
@@ -79,12 +80,29 @@ class _Subscription_PageState extends State<Subscription_Page> {
     });
     print(' profile subscribed homepage $profilepicurls');
   }
+  String thumbnails='';
+  List<String> uploadeduseruid=[];
+  List<String> thumbnail=[];
+  Future<void> fetchthumbnail() async {
+    final user = _auth.currentUser;
+    await fetchsubscriber();
+    for(String vids in subscriber){
+      final docsnap=await _firestore.collection('Global Post').doc(vids).get();
+      if(docsnap.exists){
+        setState(() {
+          thumbnails=docsnap.data()?['Thumbnail Link'];
+          thumbnail.add(thumbnails);
+        });
+      }
+    }
+    print(' thumbnail notification $thumbnail');
+  }
   void fetchUserDataPeriodically() {
     // Fetch data initially
     fetchData();
 
     // Set up a timer to fetch data every 2 seconds
-    Timer.periodic(Duration(milliseconds: 2), (timer) {
+    Timer.periodic(Duration(milliseconds: 50), (timer) {
       fetchData();
     });
   }
@@ -92,6 +110,7 @@ class _Subscription_PageState extends State<Subscription_Page> {
     await fetchsubscriber();
     await fetchusernames();
     await fetchprofilepics();
+    await fetchthumbnail();
   }
   @override
   void initState() {
@@ -100,64 +119,51 @@ class _Subscription_PageState extends State<Subscription_Page> {
     fetchsubscriber();
     fetchusernames();
     fetchprofilepics();
+    fetchthumbnail();
     fetchUserDataPeriodically();
   }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        title: Text('Notifications',style: GoogleFonts.arbutusSlab(color: Colors.white),),
+        centerTitle: false,
+        leading: IconButton(onPressed: (){
+          Navigator.pop(context);
+        }, icon: Icon(CupertinoIcons.back,color: Colors.white,)),
         backgroundColor: Colors.black,
-        title: Text('Subscriptions',style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold),),
       ),
       backgroundColor: Colors.black,
-      body: GridView.count(
-        crossAxisCount: 2,
-        children: List.generate(username.length, (index) {
-          return Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: InkWell(
-              onTap: (){
-                Navigator.push(context, MaterialPageRoute(builder: (context) => SearchedUser(UID: subscriber[index]),));
-                print('clicked ${subscriber[index]}');
-              },
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            for(int i=0;i<username.length;i++)
+              Column(
                 children: [
                   SizedBox(
-                    height: 20,
+                    height:40 ,
                   ),
-                  CircleAvatar(
-                    radius: 50,
-                    backgroundImage: NetworkImage(profilepicurls[index]),
+                  Row(
+                    children: [
+                      SizedBox(
+                        width: 10,
+                      ),
+                      CircleAvatar(
+                        radius: 25,
+                        backgroundImage: NetworkImage(profilepicurls[i]),
+                      ),
+                      SizedBox(
+                        width: 10,
+                      ),
+                      Text('${username[i]} just uploaded a video',style: GoogleFonts.arbutusSlab(color: Colors.white,fontWeight: FontWeight.bold,
+                        fontSize: 10
+                      ),),
+                    ],
                   ),
-                  SizedBox(
-                    height: 10,
-                  ),
-                  Text(
-                    username[index],
-                    style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(
-                    height: 10,
-                  ),
-                  InkWell(
-                    onTap: ()async{
-                      print(subscriber[index]);
-                      final user=_auth.currentUser;
-                      await _firestore.collection('Subscriptions').doc(user!.uid).update(
-                          {
-                            'Subscriber UIDs':FieldValue.arrayRemove([subscriber[index]])
-                          });
-                    },
-                    child: Text('Remove',style: TextStyle(
-                        color: Colors.red,fontWeight: FontWeight.bold
-                    ),),
-                  )
                 ],
-              ),
-            ),
-          );
-        }),
+              )
+          ],
+        ),
       ),
     );
   }
