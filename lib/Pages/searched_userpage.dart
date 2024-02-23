@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:flutter/cupertino.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:pixelprowess/Pages/test_video_if.dart';
 import 'package:pixelprowess/Pages/upload_page.dart';
 import 'package:pixelprowess/Video%20Card/VideoCard.dart';
@@ -12,6 +14,8 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:pixelprowess/Pages/editprofile.dart';
 import 'package:video_player/video_player.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 class SearchedUser extends StatefulWidget {
   final String UID;
   SearchedUser({
@@ -30,11 +34,12 @@ class _SearchedUserState extends State<SearchedUser> {
   final ImagePicker _imagePicker = ImagePicker();
   File? _image;
   bool islatest=true;
-  bool ispopular=false;
-  bool isoldest=false;
+  bool iscommunity=false;
+  bool isabout=false;
   final FirebaseStorage _storage = FirebaseStorage.instance;
   String? _imageUrl;
   String email='';
+  TextEditingController _communityController=TextEditingController();
   Future<void> fetchemail() async{
     final docsnap=await _firestore.collection('User Details').doc(widget.UID).get();
     if(docsnap.exists){
@@ -131,6 +136,46 @@ class _SearchedUserState extends State<SearchedUser> {
       }
     }
 
+  }
+  String ipAddress='';
+  Future<void> fetchIPAddress() async {
+    final user = _auth.currentUser;
+    final docSnap = await _firestore.collection('User Details').doc(widget.UID).get();
+    if (docSnap.exists) {
+      setState(() {
+        ipAddress = docSnap.data()?['IPAddress'] ?? '';
+      });
+      if (ipAddress.isNotEmpty) {
+        await fetchCountryNameFromIPAddress(ipAddress);
+      } else {
+        print('IP address is empty.');
+      }
+    }
+    print('IP Address $ipAddress');
+  }
+  String countryname = '';
+  Future<void> fetchCountryNameFromIPAddress(String ipAddress) async {
+    try {
+      final response = await http.get(Uri.parse('https://ipapi.co/$ipAddress/json/'));
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = json.decode(response.body);
+        setState(() { // Update state with country name
+          countryname = data['country_name'];
+        });
+        print('Country Name: $countryname');
+      } else {
+        if (response.statusCode == 429) {
+          // Implement backoff strategy
+          await Future.delayed(Duration(seconds: 5)); // Wait for 5 seconds
+          await fetchCountryNameFromIPAddress(ipAddress); // Retry the request
+        } else {
+          print('Failed to get country name. Status code: ${response.statusCode}');
+          print('Response body: ${response.body}');
+        }
+      }
+    } catch (e) {
+      print('Error: $e');
+    }
   }
   Future<void>fetchusername()async{
     final user=_auth.currentUser;
@@ -354,12 +399,66 @@ class _SearchedUserState extends State<SearchedUser> {
     }
     print(' Views got $views');
   }
+  List<String>communityposts=[];
+  List<DateTime> commuityuploaddate=[];
+  Future<void> fetchcommunityposts() async {
+    final user = _auth.currentUser;
+    try {
+      DocumentSnapshot documentSnapshot = await _firestore
+          .collection('Community Posts')
+          .doc(widget.UID)
+          .get();
+
+      if (documentSnapshot.exists) {
+        dynamic data = documentSnapshot.data();
+        if (data != null) {
+          List<dynamic> posts = (data['Posts'] as List?) ?? [];
+          setState(() {
+            communityposts =
+                posts.map((post) => post['Posts'].toString()).toList();
+          });
+        }
+      }
+      print('community homepage $communityposts');
+    } catch (e) {
+      print('Error fetching followers fetchfollowers: $e');
+    }
+
+  }
+  List<DateTime>commuploadate=[];
+  Future<void> fetchCommunityUploadDate() async {
+    final user = _auth.currentUser;
+    try {
+      DocumentSnapshot documentSnapshot = await _firestore
+          .collection('Community Posts')
+          .doc(widget.UID)
+          .get();
+
+      if (documentSnapshot.exists) {
+        dynamic data = documentSnapshot.data();
+        if (data != null) {
+          List<dynamic> posts = (data['Posts'] as List?) ?? [];
+          setState(() {
+            commuploadate = posts
+                .map((post) =>
+                (post['Date of Upload'] as Timestamp).toDate())
+                .toList();
+          });
+        }
+      }
+      print('community upload $commuploadate');
+    } catch (e) {
+      print('Error fetching comm upload date: $e');
+    }
+  }
   Future<void> fetchData() async {
     await fetchusername();
     await fetchsubscriber();
     await fetchprofilepic();
     await fetchcoverpic();
     await fetchbio();
+    await fetchcommunityposts();
+    await fetchCommunityUploadDate();
   }
   int views_video=0;
   @override
@@ -380,6 +479,9 @@ class _SearchedUserState extends State<SearchedUser> {
     fetchvideoid();
     fetchviews();
     fetchUserDataPeriodically();
+    fetchcommunityposts();
+    fetchCommunityUploadDate();
+    fetchIPAddress();
   }
   TextEditingController _captionController=TextEditingController();
   @override
@@ -563,36 +665,36 @@ class _SearchedUserState extends State<SearchedUser> {
                 children: [
                   ElevatedButton(onPressed: (){
                     islatest=true;
-                    ispopular=false;
-                    isoldest=false;
+                    iscommunity=false;
+                    isabout=false;
                   },
                       style: ButtonStyle(backgroundColor: MaterialStatePropertyAll(islatest?Colors.white:Colors.grey[900])),
                       child: Text('Latest',style: TextStyle(color: islatest?Colors.black:Colors.white),)),
                   ElevatedButton(onPressed: (){
                     setState(() {
                       islatest=false;
-                      ispopular=true;
-                      isoldest=false;
+                      iscommunity=true;
+                      isabout=false;
                     });
                   },
-                      style: ButtonStyle(backgroundColor: MaterialStatePropertyAll(ispopular?Colors.white:Colors.grey[900])),
-                      child: Text('Popular',style: TextStyle(color: ispopular?Colors.black:Colors.white),)),
+                      style: ButtonStyle(backgroundColor: MaterialStatePropertyAll(iscommunity?Colors.white:Colors.grey[900])),
+                      child: Text('Community',style: TextStyle(color: iscommunity?Colors.black:Colors.white),)),
                   ElevatedButton(onPressed: (){
                     setState(() {
                       islatest=false;
-                      ispopular=false;
-                      isoldest=true;
+                      iscommunity=false;
+                      isabout=true;
                     });
                   },
-                      style: ButtonStyle(backgroundColor: MaterialStatePropertyAll(isoldest?Colors.white:Colors.grey[900])),
-                      child: Text('Oldest',style: TextStyle(color: isoldest?Colors.black:Colors.white),)),
+                      style: ButtonStyle(backgroundColor: MaterialStatePropertyAll(isabout?Colors.white:Colors.grey[900])),
+                      child: Text('About',style: TextStyle(color: isabout?Colors.black:Colors.white),)),
                 ],
               ),
               SizedBox(
                 height: 50,
               ),
               for(int i=0;i<thumbnail.length;i++)
-                Column(
+                islatest?Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
@@ -839,9 +941,170 @@ class _SearchedUserState extends State<SearchedUser> {
                       height: 40,
                     ),
                   ],
-                ),
-
-            ]),
+                ):Container(),
+              iscommunity?Column(
+                children: [
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 30),
+                    child: TextField(
+                      style: GoogleFonts.abyssinicaSil(color: Colors.white),
+                      controller: _communityController,
+                      decoration: InputDecoration(fillColor: Colors.grey.withOpacity(0.3),
+                          filled: true,
+                          suffixIcon:IconButton(onPressed: ()async{
+                            final user=_auth.currentUser;
+                            await _firestore.collection('Community Posts').doc(user!.uid).set(
+                                {
+                                  'Posts':FieldValue.arrayUnion([
+                                    {
+                                      'Posts':_communityController.text,
+                                      'Date of Upload':DateTime.now(),
+                                      'User ID':user.uid,
+                                    }
+                                  ])
+                                },SetOptions(merge: true));
+                            _communityController.clear();
+                          },
+                              icon: Icon(Icons.send,color: Colors.white,)),
+                          hintText: '  Write for community...',
+                          hintStyle: GoogleFonts.abyssinicaSil(color: Colors.white)
+                      ),
+                    ),
+                  ),
+                  SizedBox(
+                    height: 50,
+                  ),
+                  if(communityposts.length==0)
+                    Text('All empty here',style: GoogleFonts.aclonica(
+                        color: Colors.white,
+                        fontSize: 20
+                    ),),
+                  for(int i=0;i<communityposts.length;i++)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            SizedBox(
+                              width:20,
+                            ),
+                            CircleAvatar(
+                              backgroundImage: NetworkImage(profilepicurl),
+                            ),
+                            SizedBox(
+                              width:20,
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(username,style: GoogleFonts.abyssinicaSil(color: Colors.white,fontWeight: FontWeight.bold),),
+                                    SizedBox(
+                                      width: 20,
+                                    ),
+                                    if(widget.UID==user!.uid)
+                                      InkWell(
+                                          onTap: ()async{
+                                            await _firestore.collection('Community Posts').doc(user!.uid).update(
+                                                {
+                                                  'Posts':FieldValue.arrayRemove([
+                                                    {
+                                                      'Posts':communityposts[i],
+                                                      'Date of Upload':commuploadate[i],
+                                                      'User ID':user.uid,
+                                                    }
+                                                  ])
+                                                });
+                                          },
+                                          child: Text('Delete',style: TextStyle(color: Colors.red),)),
+                                    SizedBox(
+                                      width: 20,
+                                    ),
+                                    // InkWell(
+                                    //     onTap: (){},
+                                    //     child: Text('Edit',style: TextStyle(color: Colors.red),))
+                                  ],
+                                ),
+                                Text(
+                                  '${timeago.format(commuploadate[i], locale: 'en_long', allowFromNow: true)}', // Format the upload date
+                                  style: TextStyle(color: Colors.grey,fontSize: 12),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        SizedBox(
+                          height: 30,
+                        ),
+                        Text(communityposts[i],style: GoogleFonts.abyssinicaSil(color: Colors.white,fontSize: 15),),
+                        SizedBox(
+                          height: 50,
+                        ),
+                      ],
+                    ),
+                  SizedBox(
+                    height: 50,
+                  ),
+                ],
+              ):Container(),
+              isabout?Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      SizedBox(
+                        width: 0,
+                      ),
+                      Text(' Description',style: TextStyle(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 20),),
+                    ],
+                  ),
+                  SizedBox(
+                    height: 20,
+                  ),
+                  Text(' $userbio',style: GoogleFonts.abyssinicaSil(color: Colors.white,fontSize: 15),),
+                  SizedBox(
+                    height: 20,
+                  ),
+                  Row(
+                    children: [
+                      SizedBox(
+                        width: 0,
+                      ),
+                      Text(' More Info',style: TextStyle(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 20),),
+                    ],
+                  ),
+                  SizedBox(
+                    height: 20,
+                  ),Row(
+                    children: [
+                      SizedBox(
+                        width: 0,
+                      ),
+                      Icon(CupertinoIcons.globe,color: Colors.white,),
+                      Text(' www.pixelprowess.com/u/channel/${user!.uid}',style: GoogleFonts.abyssinicaSil(color: Colors.white,fontSize: 10),),
+                    ],
+                  ),
+                  SizedBox(
+                    height: 20,
+                  ),
+                  Row(
+                    children: [
+                      SizedBox(
+                        width: 0,
+                      ),
+                      Icon(CupertinoIcons.map,color: Colors.white,),
+                      Text(' $ipAddress',style: GoogleFonts.abyssinicaSil(color: Colors.white,fontSize: 15),),
+                    ],
+                  ),
+                ],
+              ):Container(),
+              SizedBox(
+                height: 50,
+              ),
+            ]
+        ),
       ),
     );
   }

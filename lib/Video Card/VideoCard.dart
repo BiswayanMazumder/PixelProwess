@@ -154,6 +154,7 @@ class _VideoPageState extends State<VideoPage> {
     });
   }
   bool issubscribed=false;
+  
   Future<void> fetchsubscriber() async {
     final user = _auth.currentUser;
     try {
@@ -191,6 +192,21 @@ class _VideoPageState extends State<VideoPage> {
   }
   List<String> videourls=[];
   bool issaved=false;
+  bool isprivate=false;
+  Future<void> fetchisprivate() async {
+    final user = _auth.currentUser;
+    try {
+      final docsnap=await _firestore.collection('User Details').doc(widget.UID).get();
+      if(docsnap.exists){
+        setState(() {
+          isprivate=docsnap.data()?['channel private'];
+        });
+      }
+    } catch (e) {
+      print('Error fetching followers privacy: $e');
+    }
+    print('is private $isprivate');
+  }
   Future<void> fetchvideourls() async {
     final user = _auth.currentUser;
     try {
@@ -498,6 +514,7 @@ class _VideoPageState extends State<VideoPage> {
     await fetchvideourls();
     await fetchdislikedusers();
     await fetchsubscriber();
+    await fetchisprivate();
     // await fetchvideoids();
   }
   @override
@@ -505,6 +522,7 @@ class _VideoPageState extends State<VideoPage> {
     super.initState();
     fetchlikedusers();
     fetchvideoid();
+    fetchisprivate();
     fetchcaptions();
     fetchthumbnail();
     // fetchvideoids();
@@ -767,15 +785,26 @@ class _VideoPageState extends State<VideoPage> {
                           SizedBox(
                             width: 12,
                           ),
-                          if(subscriber.length>=1)
+                          if(subscriber.length>=1000)
                             Icon(Icons.verified,color: Colors.blueAccent,size: 18,)
                         ],
                       ),
                     ),
-                    if(subscriber.length<=1)
-                      Text('${subscriber.length} Subscriber',style: TextStyle(color: Colors.grey,fontSize: 12,fontWeight: FontWeight.bold),),
-                    if(subscriber.length>1)
-                      Text('${subscriber.length} Subscribers',style: TextStyle(color: Colors.grey,fontSize: 12,fontWeight: FontWeight.bold),),
+                    widget.UID==user!.uid?Row(
+                      children: [
+                        if(subscriber.length<=1)
+                          Text('${subscriber.length} Subscriber',style: TextStyle(color: Colors.grey,fontSize: 12,fontWeight: FontWeight.bold),),
+                        if(subscriber.length>1)
+                          Text('${subscriber.length} Subscribers',style: TextStyle(color: Colors.grey,fontSize: 12,fontWeight: FontWeight.bold),),
+                      ],
+                    ):isprivate?Container():Row(
+                      children: [
+                        if(subscriber.length<=1)
+                          Text('${subscriber.length} Subscriber',style: TextStyle(color: Colors.grey,fontSize: 12,fontWeight: FontWeight.bold),),
+                        if(subscriber.length>1)
+                          Text('${subscriber.length} Subscribers',style: TextStyle(color: Colors.grey,fontSize: 12,fontWeight: FontWeight.bold),),
+                      ],
+                    )
                   ],
                 ),
                 SizedBox(

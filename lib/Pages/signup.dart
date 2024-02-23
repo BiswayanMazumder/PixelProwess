@@ -51,6 +51,7 @@ class _SignupState extends State<Signup> {
           'Username': _username.text,
           'Date Of Birth': dobController.text,
           'IPAddress': ipAddress,
+          'DOJ':FieldValue.serverTimestamp()
         });
       }
     }

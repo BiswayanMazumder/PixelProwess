@@ -506,7 +506,7 @@ class _AccountpageState extends State<Accountpage> {
                         SizedBox(
                           width: 6,
                         ),
-                        if(subscriber.length>=1)
+                        if(subscriber.length>=1000)
                           Icon(Icons.verified,color: Colors.blueAccent,)
                       ],
                     ),
@@ -923,7 +923,7 @@ class _AccountpageState extends State<Accountpage> {
                         _communityController.clear();
                       },
                           icon: Icon(Icons.send,color: Colors.white,)),
-                      hintText: '  Write for community?',
+                      hintText: '  Write for community',
                       hintStyle: GoogleFonts.abyssinicaSil(color: Colors.white)
                     ),
                   ),
@@ -931,6 +931,11 @@ class _AccountpageState extends State<Accountpage> {
                 SizedBox(
                   height: 50,
                 ),
+                if(communityposts.length==0)
+                  Text('All empty here',style: GoogleFonts.aclonica(
+                    color: Colors.white,
+                    fontSize: 20
+                  ),),
                 for(int i=0;i<communityposts.length;i++)
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -957,14 +962,25 @@ class _AccountpageState extends State<Accountpage> {
                                     width: 20,
                                   ),
                                   InkWell(
-                                      onTap: (){},
+                                      onTap: ()async{
+                                        await _firestore.collection('Community Posts').doc(user!.uid).update(
+                                            {
+                                              'Posts':FieldValue.arrayRemove([
+                                                {
+                                                  'Posts':communityposts[i],
+                                                  'Date of Upload':commuploadate[i],
+                                                  'User ID':user.uid,
+                                                }
+                                              ])
+                                            });
+                                      },
                                       child: Text('Delete',style: TextStyle(color: Colors.red),)),
                                   SizedBox(
                                     width: 20,
                                   ),
-                                  InkWell(
-                                      onTap: (){},
-                                      child: Text('Edit',style: TextStyle(color: Colors.red),))
+                                  // InkWell(
+                                  //     onTap: (){},
+                                  //     child: Text('Edit',style: TextStyle(color: Colors.red),))
                                 ],
                               ),
                               Text(
