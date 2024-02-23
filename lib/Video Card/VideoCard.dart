@@ -466,11 +466,39 @@ class _VideoPageState extends State<VideoPage> {
     }
 
   }
+  // Future<void> fetchvideoids() async {
+  //   final user = _auth.currentUser;
+  //   try {
+  //     DocumentSnapshot documentSnapshot = await _firestore
+  //         .collection('User Uploaded Videos ID')
+  //         .doc(widget.UID)
+  //         .get();
+  //
+  //     if (documentSnapshot.exists) {
+  //       dynamic data = documentSnapshot.data();
+  //       if (data != null) {
+  //         List<dynamic> posts = (data['VID'] as List?) ?? [];
+  //         setState(() {
+  //           videoid =posts.map((post) => post.toString()).toList();
+  //         });
+  //       }
+  //       for(String vids in videoid){
+  //         if(vids==widget.VideoID){
+  //           videoid.remove(vids);
+  //         }
+  //       }
+  //     }
+  //     print('vids homepage $videoid');
+  //   } catch (e) {
+  //     print('Error fetching followers videos: $e');
+  //   }
+  // }
   Future<void> fetchData() async {
     await fetchlikedusers();
     await fetchvideourls();
     await fetchdislikedusers();
     await fetchsubscriber();
+    // await fetchvideoids();
   }
   @override
   void initState() {
@@ -479,6 +507,7 @@ class _VideoPageState extends State<VideoPage> {
     fetchvideoid();
     fetchcaptions();
     fetchthumbnail();
+    // fetchvideoids();
     fetchuploaddate();
     fetchviews();
     fetchuploadeduseruid();
@@ -731,8 +760,17 @@ class _VideoPageState extends State<VideoPage> {
                       onTap: (){
                         Navigator.push(context, MaterialPageRoute(builder: (context) => SearchedUser(UID: widget.UID),));
                       },
-                      child: Text(widget.username,style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,
-                          fontSize: 12),),
+                      child: Row(
+                        children: [
+                          Text(widget.username,style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,
+                              fontSize: 12),),
+                          SizedBox(
+                            width: 12,
+                          ),
+                          if(subscriber.length>=1)
+                            Icon(Icons.verified,color: Colors.blueAccent,size: 18,)
+                        ],
+                      ),
                     ),
                     if(subscriber.length<=1)
                       Text('${subscriber.length} Subscriber',style: TextStyle(color: Colors.grey,fontSize: 12,fontWeight: FontWeight.bold),),
@@ -873,6 +911,7 @@ class _VideoPageState extends State<VideoPage> {
                                 'User ID':widget.UID,
                                 'Profile Picture':widget.profilepicurl,
                                 'Username':widget.username,
+                                'Video ID':widget.VideoID,
                               }
                             ])
                           });
@@ -982,6 +1021,7 @@ class _VideoPageState extends State<VideoPage> {
                       //[Biswayan Mazumder, Biswayan Mazumder, Biswayan Mazumder, CodeZify-Flutter Developer , CodeZify-Flutter Developer , CodeZify-Flutter Developer , Biswayan Mazumder]
                       //[0LrVRSIKdRVgAWWVt9Qhv8PguJG3, 0LrVRSIKdRVgAWWVt9Qhv8PguJG3, 0LrVRSIKdRVgAWWVt9Qhv8PguJG3, h0YLztPREjeQeV2ELA9iFu0qGNa2, h0YLztPREjeQeV2ELA9iFu0qGNa2, h0YLztPREjeQeV2ELA9iFu0qGNa2, 0LrVRSIKdRVgAWWVt9Qhv8PguJG3]
                       Text('${USernames[i]}', style: TextStyle(color: Colors.grey, fontSize: 12)),
+
                       SizedBox(
                         width: 20,
                       ),

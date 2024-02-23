@@ -182,7 +182,8 @@ class _SearchedUserState extends State<SearchedUser> {
         user!.uid
       ])
     });
-    await _firestore.collection('Subscriptions').doc(user!.uid).update({
+    await _firestore.collection('Subscriptions'
+        '').doc(user!.uid).update({
       'Subscriber UIDs':FieldValue.arrayRemove([
         widget.UID
       ])

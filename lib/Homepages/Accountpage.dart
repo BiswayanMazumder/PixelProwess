@@ -31,7 +31,7 @@ class _AccountpageState extends State<Accountpage> {
   final ImagePicker _imagePicker = ImagePicker();
   File? _image;
   bool islatest=true;
-  bool ispopular=false;
+  bool iscommunity=false;
   bool isoldest=false;
   final FirebaseStorage _storage = FirebaseStorage.instance;
   String? _imageUrl;
@@ -258,6 +258,7 @@ class _AccountpageState extends State<Accountpage> {
     }
     print(' videos $videos');
   }
+  TextEditingController _communityController=TextEditingController();
   DateTime Uploaddate = DateTime.now();
   bool _loadeduploaddate=false;
   Future<void> fetchuploaddate() async {
@@ -314,18 +315,76 @@ class _AccountpageState extends State<Accountpage> {
     }
     print(' Views got $views');
   }
+  DateTime communityUploaddate = DateTime.now();
   Future<void> fetchData() async {
     await fetchusername();
     await fetchprofilepic();
     await fetchcoverpic();
     await fetchbio();
+    await fetchcommunityposts();
+    await fetchCommunityUploadDate();
   }
   int views_video=0;
+  List<String>communityposts=[];
+  List<DateTime> commuityuploaddate=[];
+  Future<void> fetchcommunityposts() async {
+    final user = _auth.currentUser;
+    try {
+      DocumentSnapshot documentSnapshot = await _firestore
+          .collection('Community Posts')
+          .doc(user?.uid)
+          .get();
+
+      if (documentSnapshot.exists) {
+        dynamic data = documentSnapshot.data();
+        if (data != null) {
+          List<dynamic> posts = (data['Posts'] as List?) ?? [];
+          setState(() {
+            communityposts =
+                posts.map((post) => post['Posts'].toString()).toList();
+          });
+        }
+      }
+      print('community homepage $communityposts');
+    } catch (e) {
+      print('Error fetching followers fetchfollowers: $e');
+    }
+
+  }
+  List<DateTime>commuploadate=[];
+  Future<void> fetchCommunityUploadDate() async {
+    final user = _auth.currentUser;
+    try {
+      DocumentSnapshot documentSnapshot = await _firestore
+          .collection('Community Posts')
+          .doc(user?.uid)
+          .get();
+
+      if (documentSnapshot.exists) {
+        dynamic data = documentSnapshot.data();
+        if (data != null) {
+          List<dynamic> posts = (data['Posts'] as List?) ?? [];
+          setState(() {
+            commuploadate = posts
+                .map((post) =>
+                (post['Date of Upload'] as Timestamp).toDate())
+                .toList();
+          });
+        }
+      }
+      print('community upload $communityUploaddate');
+    } catch (e) {
+      print('Error fetching comm upload date: $e');
+    }
+  }
+
+
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     fetchusername();
+    fetchCommunityUploadDate();
     fetchVideoLengths();
     fetchprofilepic();
     fetchthumbnail();
@@ -337,6 +396,7 @@ class _AccountpageState extends State<Accountpage> {
     fetchbio();
     fetchvideoid();
     fetchviews();
+    fetchcommunityposts();
     fetchUserDataPeriodically();
   }
   TextEditingController _captionController=TextEditingController();
@@ -371,7 +431,7 @@ class _AccountpageState extends State<Accountpage> {
                                 Navigator.pop(context);
                                 Navigator.push(context, MaterialPageRoute(builder: (context) => Watch_Later(),));
                               },
-                              child: Text('Watch Later',style: GoogleFonts.abrilFatface(color: Colors.white,
+                              child: Text('Watch Later',style: GoogleFonts.abyssinicaSil(color: Colors.white,
                                   fontWeight: FontWeight.w300),),
                             ),
                             SizedBox(
@@ -382,7 +442,7 @@ class _AccountpageState extends State<Accountpage> {
                                 Navigator.pop(context);
                                 Navigator.push(context, MaterialPageRoute(builder: (context) => EditProfile(),));
                               },
-                              child: Text('Edit Profile',style: GoogleFonts.abrilFatface(color: Colors.white,
+                              child: Text('Edit Profile',style: GoogleFonts.abyssinicaSil(color: Colors.white,
                                   fontWeight: FontWeight.w300),),
                             )
                           ],
@@ -440,7 +500,16 @@ class _AccountpageState extends State<Accountpage> {
                   mainAxisAlignment: MainAxisAlignment.start,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(username,style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontSize: 20),),
+                    Row(
+                      children: [
+                        Text(username,style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontSize: 20),),
+                        SizedBox(
+                          width: 6,
+                        ),
+                        if(subscriber.length>=1)
+                          Icon(Icons.verified,color: Colors.blueAccent,)
+                      ],
+                    ),
                     SizedBox(
                       height: 5,
                     ),
@@ -537,7 +606,7 @@ class _AccountpageState extends State<Accountpage> {
               children: [
                 ElevatedButton(onPressed: (){
                   islatest=true;
-                  ispopular=false;
+                  iscommunity=false;
                   isoldest=false;
                 },
                     style: ButtonStyle(backgroundColor: MaterialStatePropertyAll(islatest?Colors.white:Colors.grey[900])),
@@ -545,28 +614,28 @@ class _AccountpageState extends State<Accountpage> {
                 ElevatedButton(onPressed: (){
                   setState(() {
                     islatest=false;
-                    ispopular=true;
+                    iscommunity=true;
                     isoldest=false;
                   });
                 },
-                    style: ButtonStyle(backgroundColor: MaterialStatePropertyAll(ispopular?Colors.white:Colors.grey[900])),
-                    child: Text('Popular',style: TextStyle(color: ispopular?Colors.black:Colors.white),)),
+                    style: ButtonStyle(backgroundColor: MaterialStatePropertyAll(iscommunity?Colors.white:Colors.grey[900])),
+                    child: Text('Community',style: TextStyle(color: iscommunity?Colors.black:Colors.white),)),
                 ElevatedButton(onPressed: (){
                   setState(() {
                     islatest=false;
-                    ispopular=false;
+                    iscommunity=false;
                     isoldest=true;
                   });
                 },
                     style: ButtonStyle(backgroundColor: MaterialStatePropertyAll(isoldest?Colors.white:Colors.grey[900])),
-                    child: Text('Oldest',style: TextStyle(color: isoldest?Colors.black:Colors.white),)),
+                    child: Text('About',style: TextStyle(color: isoldest?Colors.black:Colors.white),)),
               ],
             ),
             SizedBox(
               height: 50,
             ),
             for(int i=0;i<thumbnail.length;i++)
-              Column(
+              islatest?Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
@@ -825,13 +894,101 @@ class _AccountpageState extends State<Accountpage> {
                       ),
                     ],
                   ),
-
                   SizedBox(
                     height: 40,
                   ),
                 ],
-              ),
-
+              ):Container(),
+            iscommunity?Column(
+              children: [
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 30),
+                  child: TextField(
+                    style: GoogleFonts.abyssinicaSil(color: Colors.white),
+                    controller: _communityController,
+                    decoration: InputDecoration(fillColor: Colors.grey.withOpacity(0.3),
+                        filled: true,
+                      suffixIcon:IconButton(onPressed: ()async{
+                        final user=_auth.currentUser;
+                        await _firestore.collection('Community Posts').doc(user!.uid).set(
+                            {
+                              'Posts':FieldValue.arrayUnion([
+                                {
+                                  'Posts':_communityController.text,
+                                  'Date of Upload':DateTime.now(),
+                                  'User ID':user.uid,
+                                }
+                              ])
+                            },SetOptions(merge: true));
+                        _communityController.clear();
+                      },
+                          icon: Icon(Icons.send,color: Colors.white,)),
+                      hintText: '  Write for community?',
+                      hintStyle: GoogleFonts.abyssinicaSil(color: Colors.white)
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  height: 50,
+                ),
+                for(int i=0;i<communityposts.length;i++)
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          SizedBox(
+                            width:20,
+                          ),
+                          CircleAvatar(
+                            backgroundImage: NetworkImage(profilepicurl),
+                          ),
+                          SizedBox(
+                            width:20,
+                          ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(username,style: GoogleFonts.abyssinicaSil(color: Colors.white,fontWeight: FontWeight.bold),),
+                                  SizedBox(
+                                    width: 20,
+                                  ),
+                                  InkWell(
+                                      onTap: (){},
+                                      child: Text('Delete',style: TextStyle(color: Colors.red),)),
+                                  SizedBox(
+                                    width: 20,
+                                  ),
+                                  InkWell(
+                                      onTap: (){},
+                                      child: Text('Edit',style: TextStyle(color: Colors.red),))
+                                ],
+                              ),
+                              Text(
+                                '${timeago.format(commuploadate[i], locale: 'en_long', allowFromNow: true)}', // Format the upload date
+                                style: TextStyle(color: Colors.grey,fontSize: 12),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      SizedBox(
+                        height: 30,
+                      ),
+                          Text(communityposts[i],style: GoogleFonts.abyssinicaSil(color: Colors.white,fontSize: 15),),
+                      SizedBox(
+                        height: 50,
+                      ),
+                    ],
+                  ),
+                SizedBox(
+                  height: 50,
+                ),
+              ],
+            ):Container()
         ]),
       ),
     );

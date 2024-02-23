@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
 import 'package:pixelprowess/Chatbot/chatbot.dart';
@@ -272,6 +275,44 @@ class _LandingPageState extends State<LandingPage> {
     }
   }
   ScrollController? _scrollController;
+  List<String> savedvideoid=[];
+  bool issaved=false;
+  Future<void> fetchsavedvideoid() async {
+    final user = _auth.currentUser;
+    try {
+      DocumentSnapshot documentSnapshot = await _firestore
+          .collection('Users Saved Videos')
+          .doc(user!.uid)
+          .get();
+
+      if (documentSnapshot.exists) {
+        dynamic data = documentSnapshot.data();
+        if (data != null) {
+          List<dynamic> posts = (data['Saved Video Details'] as List?) ?? [];
+          setState(() {
+            savedvideoid =posts.map((post) => post['Video ID'].toString()).toList();
+          });
+        }
+      }
+      print('saved vids homepage $savedvideoid');
+    } catch (e) {
+      print('Error fetching followers videos: $e');
+    }
+  }
+  void fetchUserDataPeriodically() {
+    // Fetch data initially
+    fetchData();
+
+    // Set up a timer to fetch data every 2 seconds
+    Timer.periodic(Duration(seconds: 2), (timer) {
+      fetchData();
+    });
+  }
+  Future<void> fetchData() async {
+    await fetchsavedvideoid();
+    await fetchsubscriber();
+    // await fetchvideoids();
+  }
   @override
   void initState() {
     // TODO: implement initState
@@ -280,11 +321,13 @@ class _LandingPageState extends State<LandingPage> {
     fetchcaptions();
     fetchthumbnail();
     fetchuploaddate();
+    fetchsavedvideoid();
     fetchviews();
     fetchuploadeduseruid();
     fetchdp();
     fetchusernames();
     fetchvideo();
+    fetchUserDataPeriodically();
     print('fetched video $videos, ${videos.length}');
     fetchsubscriber();
     // fetchusernames();
@@ -313,9 +356,9 @@ class _LandingPageState extends State<LandingPage> {
         actions: [
           Row(
             children: [
-              IconButton(onPressed: (){
-                Navigator.push(context, MaterialPageRoute(builder: (context) => Notification_Page(),));
-              }, icon: Icon(Icons.notifications_outlined,color: Colors.white,)),
+              // IconButton(onPressed: (){
+              //   Navigator.push(context, MaterialPageRoute(builder: (context) => Notification_Page(),));
+              // }, icon: Icon(Icons.notifications_outlined,color: Colors.white,)),
               IconButton(onPressed: (){
                 Navigator.push(context, MaterialPageRoute(builder: (context) => SearchPage(),));
               }, icon: AnimatedIcon(icon: AnimatedIcons.ellipsis_search, progress: kAlwaysCompleteAnimation,color: Colors.white,))
@@ -324,14 +367,21 @@ class _LandingPageState extends State<LandingPage> {
         ],
         title: Row(
           children: [
-            Image.network('https://emkldzxxityxmjkxiggw.supabase.co/storage/v1/object/public/PixelProwess/_3983829c-0a3e-4628-9b05-4eec15080e79.jpg',
+            ProgressiveImage(
               height: 50,
               width: 50,
+              baseColor: Colors.grey.shade900,
+              highlightColor: Colors.white,
+              imageError: 'Failed To Load Image',
+              image: 'https://emkldzxxityxmjkxiggw.supabase.co/storage/v1/object/public/PixelProwess/_3983829c-0a3e-4628-9b05-4eec15080e79.jpg',
             ),
             SizedBox(
               width: 10,
             ),
-            Text('𝓟𝓲𝔁𝓮𝓵𝓟𝓻𝓸𝔀𝓮𝓼𝓼',style: TextStyle(color: Colors.white),)
+            Animate(
+              effects: [FadeEffect(), ScaleEffect()],
+              child: Text('𝓟𝓲𝔁𝓮𝓵𝓟𝓻𝓸𝔀𝓮𝓼𝓼',style: GoogleFonts.arbutusSlab(color: Colors.white),),
+            )
           ],
         ),
       ),
@@ -384,7 +434,7 @@ class _LandingPageState extends State<LandingPage> {
                                 height: 300,
                                 width: 1280,
                                 baseColor: Colors.grey.shade900,
-                                highlightColor: Colors.red,
+                                highlightColor: Colors.white,
                                 imageError: 'Failed To Load Image',
                                 image: thumbnail[i],
                               ),
@@ -441,7 +491,98 @@ class _LandingPageState extends State<LandingPage> {
                             },
                             child: Text(captions[i],style: GoogleFonts.arbutusSlab(color: Colors.white,fontSize: 15),)),
                         Spacer(),
-                        IconButton(onPressed: (){}, icon: Icon(Icons.more_vert,color: Colors.white,))
+                        IconButton(onPressed: ()async{
+                          showDialog(context: context,
+                              builder:(context) {
+                                return AlertDialog(
+                                  backgroundColor: Colors.grey.withOpacity(0.89),
+                                  title: Center(
+                                    child: Text('More Options',style: GoogleFonts.arbutusSlab(color: Colors.white,fontWeight: FontWeight.bold,
+                                        fontSize: 15
+                                    ),),
+                                  ),
+                                  actions: [
+                                    Center(
+                                      child: Column(
+                                        children: [
+                                          InkWell(
+                                            onTap:()async{
+                                              final user=_auth.currentUser;
+                                              await _firestore.collection('Reports').doc(uploadeduseruid[i]).set(
+                                                  {
+                                                    'Reports':FieldValue.arrayUnion([
+                                                      {
+                                                        'User ID':user!.uid,
+                                                        'Video ID':videoid[i],
+                                                        'Captions':captions[i],
+                                                        'Usernames':USernames[i],
+                                                        'Profile Pic':Profileurls[i],
+                                                        'Report Accepted':false,
+                                                        'Time Of Reporting':DateTime.now(),
+                                                      }
+                                                    ])
+                                                  },SetOptions(merge: true));
+                                              Navigator.pop(context);
+                                            },
+                                            child: Text('Report Video',style: GoogleFonts.arbutusSlab(color: Colors.white,
+                                                fontWeight: FontWeight.w300),),
+                                          ),
+                                          SizedBox(
+                                            height: 20,
+                                          ),
+                                          if(savedvideoid.contains(videoid[i]))
+                                            InkWell(
+                                              onTap:()async{
+                                                Navigator.pop(context);
+                                                final user=_auth.currentUser;
+                                                await _firestore.collection('Users Saved Videos').doc(user!.uid).update(
+                                                    {
+                                                      'Saved Video Details':FieldValue.arrayRemove([
+                                                        {
+                                                          'Thumbnail': thumbnail[i],
+                                                          'Video Link':videos[i],
+                                                          'User ID':user!.uid,
+                                                          'Profile Picture':Profileurls[i],
+                                                          'Username':USernames[i],
+                                                          'Video ID':videoid[i],
+                                                        }
+                                                      ])
+                                                    });
+                                                // Navigator.push(context, MaterialPageRoute(builder: (context) => EditProfile(),));
+                                              },
+                                              child: Text('Remove from watch later',style: GoogleFonts.arbutusSlab(color: Colors.white,
+                                                  fontWeight: FontWeight.w300),),
+                                            ),
+                                          if(!savedvideoid.contains(videoid[i]))
+                                            InkWell(
+                                              onTap:()async{
+                                                Navigator.pop(context);
+                                                final user=_auth.currentUser;
+                                                await _firestore.collection('Users Saved Videos').doc(user!.uid).set(
+                                                    {
+                                                      'Saved Video Details':FieldValue.arrayUnion([
+                                                        {
+                                                          'Thumbnail': thumbnail[i],
+                                                          'Video Link':videos[i],
+                                                          'User ID':user!.uid,
+                                                          'Profile Picture':Profileurls[i],
+                                                          'Username':USernames[i],
+                                                          'Video ID':videoid[i],
+                                                        }
+                                                      ])
+                                                    },SetOptions(merge: true));
+                                                // Navigator.push(context, MaterialPageRoute(builder: (context) => EditProfile(),));
+                                              },
+                                              child: Text('Add to watch later',style: GoogleFonts.arbutusSlab(color: Colors.white,
+                                                  fontWeight: FontWeight.w300),),
+                                            ),
+                                        ],
+                                      ),
+                                    )
+                                  ],
+                                );
+                              },);
+                        }, icon: Icon(Icons.more_vert,color: Colors.white,))
                       ],
                     ),
                     SizedBox(
