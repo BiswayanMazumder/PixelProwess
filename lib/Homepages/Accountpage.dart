@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/cupertino.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:pixelprowess/Pages/test_video_if.dart';
 import 'package:pixelprowess/Pages/upload_page.dart';
@@ -15,6 +17,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:pixelprowess/Pages/editprofile.dart';
 import 'package:video_player/video_player.dart';
+import 'package:http/http.dart' as http;
 class Accountpage extends StatefulWidget {
   const Accountpage({Key? key}) : super(key: key);
 
@@ -32,7 +35,7 @@ class _AccountpageState extends State<Accountpage> {
   File? _image;
   bool islatest=true;
   bool iscommunity=false;
-  bool isoldest=false;
+  bool isabout=false;
   final FirebaseStorage _storage = FirebaseStorage.instance;
   String? _imageUrl;
   Future<void> fetchVideoLengths() async {
@@ -183,7 +186,7 @@ class _AccountpageState extends State<Accountpage> {
   List<String> videos=[];
   List<String>captions=[];
   List<String> thumbnail=[];
-
+  TextEditingController _playlistController=TextEditingController();
   List<DateTime> uploaddate=[];
   List<String>videoid=[];
   Future<void> fetchvideoid() async {
@@ -320,6 +323,7 @@ class _AccountpageState extends State<Accountpage> {
     await fetchusername();
     await fetchprofilepic();
     await fetchcoverpic();
+    await fetchAllDocuments();
     await fetchbio();
     await fetchcommunityposts();
     await fetchCommunityUploadDate();
@@ -351,6 +355,7 @@ class _AccountpageState extends State<Accountpage> {
     }
 
   }
+  bool isplaylist=false;
   List<DateTime>commuploadate=[];
   Future<void> fetchCommunityUploadDate() async {
     final user = _auth.currentUser;
@@ -377,12 +382,74 @@ class _AccountpageState extends State<Accountpage> {
       print('Error fetching comm upload date: $e');
     }
   }
+  String ipAddress='';
+  Future<void> fetchIPAddress() async {
+    final user = _auth.currentUser;
+    final docSnap = await _firestore.collection('User Details').doc(user!.uid).get();
+    if (docSnap.exists) {
+      setState(() {
+        ipAddress = docSnap.data()?['IPAddress'] ?? '';
+      });
+      if (ipAddress.isNotEmpty) {
+        await fetchCountryNameFromIPAddress(ipAddress);
+      } else {
+        print('IP address is empty.');
+      }
+    }
+    print('IP Address $ipAddress');
+  }
+  String countryname = '';
+  Future<void> fetchCountryNameFromIPAddress(String ipAddress) async {
+    try {
+      final response = await http.get(Uri.parse('https://ipapi.co/$ipAddress/json/'));
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = json.decode(response.body);
+        setState(() { // Update state with country name
+          countryname = data['country_name'];
+        });
+        print('Country Name: $countryname');
+      } else {
+        if (response.statusCode == 429) {
+          // Implement backoff strategy
+          await Future.delayed(Duration(seconds: 5)); // Wait for 5 seconds
+          await fetchCountryNameFromIPAddress(ipAddress); // Retry the request
+        } else {
+          print('Failed to get country name. Status code: ${response.statusCode}');
+          print('Response body: ${response.body}');
+        }
+      }
+    } catch (e) {
+      print('Error: $e');
+    }
+  }
+  List<Map<String, dynamic>> playlistDocs = [];
 
+  Future<void> fetchAllDocuments() async {
+    final user = _auth.currentUser;
+    try {
+      QuerySnapshot querySnapshot = await _firestore.collection(user!.uid).get();
+      querySnapshot.docs.forEach((doc) {
+        // Explicitly cast doc.data() to Map<String, dynamic>?
+        Map<String, dynamic>? data = doc.data() as Map<String, dynamic>?;
+        if (data != null) {
+          playlistDocs.add(data);
+        }
+      });
+
+      // Do something with playlistDocs if needed
+      print('playlists $playlistDocs');
+
+    } catch (e) {
+      // Handle errors
+      print('Error fetching documents: $e');
+    }
+  }
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+    fetchIPAddress();
     fetchusername();
     fetchCommunityUploadDate();
     fetchVideoLengths();
@@ -398,6 +465,7 @@ class _AccountpageState extends State<Accountpage> {
     fetchviews();
     fetchcommunityposts();
     fetchUserDataPeriodically();
+    fetchAllDocuments();
   }
   TextEditingController _captionController=TextEditingController();
   @override
@@ -595,44 +663,82 @@ class _AccountpageState extends State<Accountpage> {
                 SizedBox(
                   width: 20,
                 ),
-                Text('Videos',style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontSize: 20),)
+                if(islatest)
+                  Text('Videos',style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontSize: 20),),
+                if(iscommunity)
+                  Text('Community',style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontSize: 20),),
+                if(isabout)
+                  Text('About',style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontSize: 20),),
+                if(isplaylist)
+                  Text('Playlist',style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontSize: 20),),
               ],
             ),
             SizedBox(
               height: 20,
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                ElevatedButton(onPressed: (){
-                  islatest=true;
-                  iscommunity=false;
-                  isoldest=false;
-                },
-                    style: ButtonStyle(backgroundColor: MaterialStatePropertyAll(islatest?Colors.white:Colors.grey[900])),
-                    child: Text('Latest',style: TextStyle(color: islatest?Colors.black:Colors.white),)),
-                ElevatedButton(onPressed: (){
-                  setState(() {
-                    islatest=false;
-                    iscommunity=true;
-                    isoldest=false;
-                  });
-                },
-                    style: ButtonStyle(backgroundColor: MaterialStatePropertyAll(iscommunity?Colors.white:Colors.grey[900])),
-                    child: Text('Community',style: TextStyle(color: iscommunity?Colors.black:Colors.white),)),
-                ElevatedButton(onPressed: (){
-                  setState(() {
-                    islatest=false;
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  SizedBox(
+                    width: 20,
+                  ),
+                  ElevatedButton(onPressed: (){
+                    islatest=true;
                     iscommunity=false;
-                    isoldest=true;
-                  });
-                },
-                    style: ButtonStyle(backgroundColor: MaterialStatePropertyAll(isoldest?Colors.white:Colors.grey[900])),
-                    child: Text('About',style: TextStyle(color: isoldest?Colors.black:Colors.white),)),
-              ],
+                    isabout=false;
+                    isplaylist=false;
+                  },
+                      style: ButtonStyle(backgroundColor: MaterialStatePropertyAll(islatest?Colors.white:Colors.grey[900])),
+                      child: Text('Latest',style: TextStyle(color: islatest?Colors.black:Colors.white),)),
+                  SizedBox(
+                    width: 20,
+                  ),
+                  ElevatedButton(onPressed: (){
+                    setState(() {
+                      islatest=false;
+                      iscommunity=true;
+                      isabout=false;
+                      isplaylist=false;
+                    });
+                  },
+                      style: ButtonStyle(backgroundColor: MaterialStatePropertyAll(iscommunity?Colors.white:Colors.grey[900])),
+                      child: Text('Community',style: TextStyle(color: iscommunity?Colors.black:Colors.white),)),
+                  SizedBox(
+                    width: 20,
+                  ),
+                  ElevatedButton(onPressed: (){
+                    setState(() {
+                      islatest=false;
+                      iscommunity=false;
+                      isabout=true;
+                      isplaylist=false;
+                    });
+                  },
+                      style: ButtonStyle(backgroundColor: MaterialStatePropertyAll(isabout?Colors.white:Colors.grey[900])),
+                      child: Text('About',style: TextStyle(color: isabout?Colors.black:Colors.white),)),
+                  SizedBox(
+                    width: 20,
+                  ),
+                  ElevatedButton(onPressed: (){
+                    setState(() {
+                      islatest=false;
+                      iscommunity=false;
+                      isabout=false;
+                      isplaylist=true;
+                    });
+                  },
+                      style: ButtonStyle(backgroundColor: MaterialStatePropertyAll(isplaylist?Colors.white:Colors.grey[900])),
+                      child: Text('Playlists',style: TextStyle(color: isplaylist?Colors.black:Colors.white),)),
+                  SizedBox(
+                    width: 20,
+                  ),
+                ],
+              ),
             ),
             SizedBox(
-              height: 50,
+              height: 20,
             ),
             for(int i=0;i<thumbnail.length;i++)
               islatest?Column(
@@ -1004,7 +1110,142 @@ class _AccountpageState extends State<Accountpage> {
                   height: 50,
                 ),
               ],
-            ):Container()
+            ):Container(),
+            isabout?Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    SizedBox(
+                      width: 0,
+                    ),
+                    Text(' Description',style: TextStyle(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 20),),
+                  ],
+                ),
+                SizedBox(
+                  height: 20,
+                ),
+                Text(' $userbio',style: GoogleFonts.abyssinicaSil(color: Colors.white,fontSize: 15),),
+                SizedBox(
+                  height: 20,
+                ),
+                Row(
+                  children: [
+                    SizedBox(
+                      width: 0,
+                    ),
+                    Text(' More Info',style: TextStyle(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 20),),
+                  ],
+                ),
+                SizedBox(
+                  height: 20,
+                ),Row(
+                  children: [
+                    SizedBox(
+                      width: 0,
+                    ),
+                    Icon(CupertinoIcons.globe,color: Colors.white,),
+                    Text(' www.pixelprowess.com/u/channel/${user!.uid}',style: GoogleFonts.abyssinicaSil(color: Colors.white,fontSize: 10),),
+                  ],
+                ),
+                SizedBox(
+                  height: 20,
+                ),
+                Row(
+                  children: [
+                    SizedBox(
+                      width: 0,
+                    ),
+                    Icon(CupertinoIcons.map,color: Colors.white,),
+                    Text(' $ipAddress',style: GoogleFonts.abyssinicaSil(color: Colors.white,fontSize: 15),),
+                  ],
+                ),
+              ],
+            ):Container(),
+            isplaylist?Column(
+              children: [
+                Row(
+                  children: [
+                    Spacer(),
+                    InkWell(
+                      onTap: (){
+                       showDialog(context: context, builder: (context) {
+                         return AlertDialog(
+                           backgroundColor: Colors.black,
+                           title: Center(child: Text('Playlist Details',style: GoogleFonts.abyssinicaSil(color: Colors.white,
+                           fontSize:20,fontWeight: FontWeight.bold
+                           ),)),
+                           actions: [
+                             Column(
+                               children: [
+                                 SizedBox(
+                                   height: 10,
+                                 ),
+                                 Center(child: Text('Playlist Name',style: GoogleFonts.abyssinicaSil(color: Colors.white,
+                                     fontSize:15
+                                 ),)),
+                                 Padding(
+                                   padding: const EdgeInsets.all(20.0),
+                                   child: TextField(
+                                     controller: _playlistController,
+                                     decoration: InputDecoration(
+                                       hintText: 'Playlist Name',
+                                       fillColor: Colors.grey,
+                                       filled: true
+                                     ),
+                                   ),
+                                 ),
+                                 SizedBox(
+                                   height: 20,
+                                 ),
+                                 ElevatedButton(onPressed: ()async{
+                                   final user=_auth.currentUser;
+                                   if(_playlistController.text.isNotEmpty)
+                                   {
+                                     await _firestore.collection(user!.uid).doc(_playlistController.text).set(
+                                         {
+                                           'Playlist creation time': FieldValue.serverTimestamp(),
+                                           'name':_playlistController.text,
+                                         }
+                                     );
+
+                                   }
+                                   Navigator.pop(context);
+                                   _playlistController.clear();
+                                 },
+                                     child: Text('Create',style: TextStyle(color: Colors.black),),
+                                 style: ButtonStyle(backgroundColor: MaterialStatePropertyAll(Colors.green)),
+                                 )
+                               ],
+                             )
+                           ],
+                         );
+                       },) ;
+                      },
+                      child: Row(
+                        children: [
+                          Text('Create Playlist  ',style: GoogleFonts.abyssinicaSil(color: Colors.white,fontWeight: FontWeight.bold),),
+                        Icon(Icons.playlist_add,color: Colors.white,),
+                          SizedBox(
+                            width: 10,
+                          )
+                        ],
+                      ),
+                    )
+                  ],
+                ),
+                ListView.builder(
+                  itemCount: playlistDocs.length,
+                  itemBuilder: (BuildContext context, int index) {
+                    String docString = jsonEncode(playlistDocs[index]);
+                    return ListTile(
+                      title: Text('Document ${index + 1}'),
+                      subtitle: Text(docString,style: TextStyle(color: Colors.white),),
+                    );
+                  },
+                )
+              ],
+            ):Container(),
         ]),
       ),
     );

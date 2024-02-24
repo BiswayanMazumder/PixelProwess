@@ -32,6 +32,29 @@ class _LandingPageState extends State<LandingPage> {
   List<String> thumbnail=[];
   List<DateTime> uploaddate=[];
   List<String> videoid=[];
+  List<String> queueuvideoid=[];
+  Future<void> fetchqueuevideoid() async {
+    final user = _auth.currentUser;
+    try {
+      DocumentSnapshot documentSnapshot = await _firestore
+          .collection('Queue')
+          .doc(user!.uid)
+          .get();
+
+      if (documentSnapshot.exists) {
+        dynamic data = documentSnapshot.data();
+        if (data != null) {
+          List<dynamic> posts = (data['Queue UIDs'] as List?) ?? [];
+          setState(() {
+            queueuvideoid =posts.map((post) => post.toString()).toList();
+          });
+        }
+      }
+      print('queue homepage $queueuvideoid');
+    } catch (e) {
+      print('Error fetching followers videos: $e');
+    }
+  }
   Future<void> fetchvideoid() async {
     final user = _auth.currentUser;
     try {
@@ -311,6 +334,7 @@ class _LandingPageState extends State<LandingPage> {
   Future<void> fetchData() async {
     await fetchsavedvideoid();
     await fetchsubscriber();
+    await fetchqueuevideoid();
     // await fetchvideoids();
   }
   @override
@@ -324,6 +348,7 @@ class _LandingPageState extends State<LandingPage> {
     fetchsavedvideoid();
     fetchviews();
     fetchuploadeduseruid();
+    fetchqueuevideoid();
     fetchdp();
     fetchusernames();
     fetchvideo();
@@ -576,6 +601,39 @@ class _LandingPageState extends State<LandingPage> {
                                               child: Text('Add to watch later',style: GoogleFonts.arbutusSlab(color: Colors.white,
                                                   fontWeight: FontWeight.w300),),
                                             ),
+                                          SizedBox(
+                                            height: 20,
+                                          ),
+                                          if(!queueuvideoid.contains(videoid[i]))
+                                            InkWell(
+                                              onTap: ()async{
+                                                final user=_auth.currentUser;
+                                                await _firestore.collection('Queue').doc(user!.uid).set(
+                                                    {
+                                                      'Queue UIDs':FieldValue.arrayUnion(
+                                                        [
+                                                          videoid[i]
+                                                        ]
+                                                      )
+                                                    },SetOptions(merge: true));
+                                                Navigator.pop(context);
+                                              },
+                                              child: Text('Add to Queue',style: GoogleFonts.arbutusSlab(color: Colors.white,fontWeight: FontWeight.w300),),
+                                            ),
+                                          if(queueuvideoid.contains(videoid[i]))
+                                            InkWell(
+                                              onTap: ()async{
+                                                final user=_auth.currentUser;
+                                                await _firestore.collection('Queue').doc(user!.uid).update(
+                                                    {
+                                                      'Queue UIDs':FieldValue.arrayRemove([
+                                                        videoid[i]
+                                                      ])
+                                                    });
+                                                Navigator.pop(context);
+                                              },
+                                              child: Text('Remove from Queue',style: GoogleFonts.arbutusSlab(color: Colors.white,fontWeight: FontWeight.w300),),
+                                            )
                                         ],
                                       ),
                                     )

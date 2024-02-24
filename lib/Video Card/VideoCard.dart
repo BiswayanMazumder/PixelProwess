@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:pixelprowess/Pages/searched_userpage.dart';
 import 'package:shimmer_image/shimmer_image.dart';
+import 'package:typing_animation/typing_animation_code.dart';
 import 'package:video_player/video_player.dart';
 import 'package:timeago/timeago.dart'as timeago;
 import 'package:translator/translator.dart';
@@ -509,26 +510,217 @@ class _VideoPageState extends State<VideoPage> {
   //     print('Error fetching followers videos: $e');
   //   }
   // }
+  List<String> queueuids=[];
+  Future<void> fetchqueueuploadeduseruid() async {
+    final user = _auth.currentUser;
+    await fetchqueuevideoid();
+    List<String> newUploadedUserIds = [];
+    for (String vids in queueuvideoid) {
+      final docsnap = await _firestore.collection('Global Post').doc(vids).get();
+      if (docsnap.exists) {
+        newUploadedUserIds.add(docsnap.data()?['Uploaded UID']);
+      }
+    }
+    setState(() {
+      queueuids = List.from(newUploadedUserIds); // Update uploadeduseruid with newUploadedUserIds
+      _loadeduseruid=true;
+    });
+    print(' UIDs queue $queueuids');
+  }
+  List<String> queueuvideoid=[];
+  Future<void> fetchqueuevideoid() async {
+    final user = _auth.currentUser;
+    try {
+      DocumentSnapshot documentSnapshot = await _firestore
+          .collection('Queue')
+          .doc(user!.uid)
+          .get();
+
+      if (documentSnapshot.exists) {
+        dynamic data = documentSnapshot.data();
+        if (data != null) {
+          List<dynamic> posts = (data['Queue UIDs'] as List?) ?? [];
+          setState(() {
+            queueuvideoid =posts.map((post) => post.toString()).toList();
+          });
+        }
+      }
+      print('queue homepage $queueuvideoid');
+    } catch (e) {
+      print('Error fetching followers videos: $e');
+    }
+  }
+  String _queuedp='';
+  List<String> queuedp=[];
+  Future<void> fetchqueuedp() async {
+    final user = _auth.currentUser;
+    await fetchqueueuploadeduseruid();
+    List<String> uploadedUserIdsCopy = List.from(queueuids); // Make a copy of the list
+    for (String vids in uploadedUserIdsCopy) {
+      final docsnap = await _firestore.collection('User Profile Pictures').doc(vids).get();
+      if (docsnap.exists) {
+        setState(() {
+          _queuedp=docsnap.data()?['Profile Pic'];
+          queuedp.add(_queuedp);
+          _loadeddp=true;
+        });
+      }
+      else{
+        setState(() {
+          queuedp.add('https://img.freepik.com/free-vector/businessman-character-avatar-isolated_'
+              '24877-60111.jpg?w=740&t=st=1707932498~exp=1707933098~hmac=63fef39a600650c9d8f0c064778238717'
+              'd1a8298782da830e68ce7818054ed6f');
+        });
+      }
+    }
+    print(' dp queue $queuedp');
+  }
+  String queueCaption='';
+  List<String> queuecaptions=[];
+  Future<void> fetchqueuecaptions() async {
+    final user = _auth.currentUser;
+    await fetchqueuevideoid();
+    for(String vids in queueuvideoid){
+      final docsnap=await _firestore.collection('Global Post').doc(vids).get();
+      if(docsnap.exists){
+        setState(() {
+          queueCaption=docsnap.data()?['Caption'];
+          queuecaptions.add(queueCaption);
+          _loadedcaptions=true;
+        });
+      }
+    }
+    print(' captions queue $queuecaptions');
+  }
+  String queueusernames='';
+  List<String> Queueusernames=[];
+  String _queueusername='';
+  Future<void> fetchqueueusernames() async {
+    final user = _auth.currentUser;
+    await fetchqueueuploadeduseruid();
+    List<String> newusernames = []; // Create a new list to store usernames
+    try {
+      List<String> uploadedUserIdsCopy = List.from(queueuids); // Make a copy of the list
+      for (String vids in uploadedUserIdsCopy) {
+        final docsnap = await _firestore.collection('User Details').doc(vids).get();
+        if (docsnap.exists) {
+          setState(() {
+            queueusernames = docsnap.data()?['Username'];
+            newusernames.add(queueusernames); // Add the username to the new list
+            loadedusernames=true;
+          });
+        }
+      }
+      setState(() {
+        Queueusernames.addAll(newusernames); // Add all usernames to the USernames list after the loop
+      });
+    } catch (e) {
+      print('username error $e');
+    }
+    print(' username queue $Queueusernames');
+  }
+  List<int> queueviews=[];
+  int fetchedqueueviews=0;
+  Future<void> fetchqueueviews() async{
+    await fetchvideoid();
+    for (String vids in queueuvideoid) {
+      final docsnap =
+      await _firestore.collection('Global Post').doc(vids).get();
+      if (docsnap.exists) {
+        final fetchviews = docsnap.data()?['Views'];
+        setState(() {
+          fetchedqueueviews = fetchviews;
+          queueviews.add(fetchedqueueviews);
+          _loadedviews=true;
+        });
+      }
+    }
+    print(' Views got queue$queueviews');
+  }
+  DateTime queueUploaddate = DateTime.now();
+  List<DateTime>queueuploaddate=[];
+  Future<void> fetcqueuehuploaddate() async {
+    await fetchqueuevideoid();
+    for (String vids in queueuvideoid) {
+      final docsnap =
+      await _firestore.collection('Global Post').doc(vids).get();
+      if (docsnap.exists) {
+        final timestamp = docsnap.data()?['Uploaded At'] as Timestamp;
+        final uploadDateTime = timestamp.toDate(); // Convert Firestore Timestamp to DateTime
+        setState(() {
+          queueUploaddate = uploadDateTime;
+          queueuploaddate.add(queueUploaddate);
+          _loadeddatetime=true;
+        });
+      }
+    }
+    print(' upload date queue $queueuploaddate');
+  }
+  String queueVideolinks='';
+  List<String> queuevideos=[];
+  Future<void> fetchqueuevideo() async {
+    await fetchqueuevideoid();
+    List<String> newUploadedUserIds = [];
+    for(String vids in queueuvideoid){
+      final docsnap=await _firestore.collection('Global Post').doc(vids).get();
+      if(docsnap.exists){
+        newUploadedUserIds.add(docsnap.data()?['Video Link']);
+      }
+    }
+    setState(() {
+      queuevideos=List.from(newUploadedUserIds);
+    });
+    print(' queue videos $queuevideos');
+  }
+  String queuethumbnails='';
+  List<String> Queuethumbnails=[];
+  Future<void> fetchqueuethumbnail() async {
+    final user = _auth.currentUser;
+    await fetchqueuevideoid();
+    for(String vids in queueuvideoid){
+      final docsnap=await _firestore.collection('Global Post').doc(vids).get();
+      if(docsnap.exists){
+        setState(() {
+          queuethumbnails=docsnap.data()?['Thumbnail Link'];
+          Queuethumbnails.add(queuethumbnails);
+          _loadedthumbnail=true;
+        });
+      }
+    }
+    print(' thumbnail queue $Queuethumbnails');
+  }
   Future<void> fetchData() async {
     await fetchlikedusers();
     await fetchvideourls();
     await fetchdislikedusers();
     await fetchsubscriber();
     await fetchisprivate();
+    await fetchqueuevideoid();
     // await fetchvideoids();
   }
+  bool showqueue=true;
   @override
   void initState() {
     super.initState();
+    fetchqueueviews();
+    fetchqueuevideoid();
+    fetchqueuethumbnail();
+    fetchqueuevideo();
+    fetcqueuehuploaddate();
+    fetchqueueusernames();
+    fetchqueueuploadeduseruid();
     fetchlikedusers();
     fetchvideoid();
+    fetchqueuecaptions();
     fetchisprivate();
     fetchcaptions();
     fetchthumbnail();
     // fetchvideoids();
     fetchuploaddate();
     fetchviews();
+    fetchqueuedp();
     fetchuploadeduseruid();
+    fetchqueuevideoid();
     fetchvideourls();
     fetchdp();
     fetchusernames();
@@ -951,7 +1143,127 @@ class _VideoPageState extends State<VideoPage> {
                 ],
               ),
             ),
-
+            SizedBox(
+              height: 45,
+            ),
+            queueuvideoid.length>0?Column(
+              children: [
+                Container(
+                  height: 80,
+                  width: 350,
+                  color: Colors.grey.shade900,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(20.0),
+                        child: Center(
+                          child: Text(
+                            'Added To Queue',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 20,
+                            ),
+                          ),
+                        ),
+                      ),
+                      Spacer(),
+                      IconButton(
+                        onPressed: () {
+                          setState(() {
+                            showqueue = !showqueue;
+                          });
+                          print('showqueue $showqueue');
+                        },
+                        icon: Icon(Icons.arrow_drop_down, color: Colors.white),
+                      )
+                    ],
+                  ),
+                ),
+                if (captions.isEmpty) // Check if captions list is empty
+                  Container(
+                      height: 80,
+                      width: 350,
+                      color: Colors.grey.withOpacity(0.8),
+                      child: Center(
+                          child: CircularProgressIndicator())) // Display circular progress indicator
+                else if (showqueue) // Check if showqueue is true
+                  Container(
+                    height: 300,
+                    width: 350,
+                    color: Colors.grey.withOpacity(0.8),
+                    child: SingleChildScrollView(
+                      child: Column(
+                        children: [
+                          for (int a = 0; a < queueuvideoid.length; a++)
+                            Row(
+                              children: [
+                                Container(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(10.0),
+                                    child: ProgressiveImage(
+                                      image: Queuethumbnails[a],
+                                      height: 80,
+                                      width: 80,
+                                    ),
+                                  ),
+                                ),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      queuecaptions[a],
+                                      style: GoogleFonts.abyssinicaSil(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    Text(
+                                      Queueusernames[a],
+                                      style: GoogleFonts.abyssinicaSil(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w300,
+                                      ),
+                                    ),
+                                    Row(
+                                      children: [
+                                        Text(
+                                          '${queueviews[a]}',
+                                          style: GoogleFonts.abyssinicaSil(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w300,
+                                          ),
+                                        ),
+                                        SizedBox(
+                                          width: 10,
+                                        ),
+                                        Text(
+                                          timeago.format(
+                                            queueuploaddate[a],
+                                            locale: 'en_long',
+                                            allowFromNow: true,
+                                          ), // Format the upload date
+                                          style: GoogleFonts.abyssinicaSil(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w300,
+                                          ),
+                                        ),
+                                      ],
+                                    )
+                                  ],
+                                )
+                              ],
+                            )
+                        ],
+                      ),
+                    ),
+                  ),
+                SizedBox(
+                  height: 20,
+                )
+              ],
+            ):Container(),
             SizedBox(
               height: 20,
             ),

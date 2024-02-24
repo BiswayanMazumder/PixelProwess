@@ -373,6 +373,7 @@ class _SearchedUserState extends State<SearchedUser> {
       });
     }
   }
+  bool isplaylist=false;
   void fetchUserDataPeriodically() {
     // Fetch data initially
     fetchData();
@@ -654,41 +655,79 @@ class _SearchedUserState extends State<SearchedUser> {
                   SizedBox(
                     width: 20,
                   ),
-                  Text('Videos',style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontSize: 20),)
+                  if(islatest)
+                    Text('Videos',style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontSize: 20),),
+                  if(iscommunity)
+                    Text('Community',style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontSize: 20),),
+                  if(isabout)
+                    Text('About',style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontSize: 20),),
+                  if(isplaylist)
+                    Text('Playlist',style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontSize: 20),),
                 ],
               ),
               SizedBox(
                 height: 20,
               ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  ElevatedButton(onPressed: (){
-                    islatest=true;
-                    iscommunity=false;
-                    isabout=false;
-                  },
-                      style: ButtonStyle(backgroundColor: MaterialStatePropertyAll(islatest?Colors.white:Colors.grey[900])),
-                      child: Text('Latest',style: TextStyle(color: islatest?Colors.black:Colors.white),)),
-                  ElevatedButton(onPressed: (){
-                    setState(() {
-                      islatest=false;
-                      iscommunity=true;
-                      isabout=false;
-                    });
-                  },
-                      style: ButtonStyle(backgroundColor: MaterialStatePropertyAll(iscommunity?Colors.white:Colors.grey[900])),
-                      child: Text('Community',style: TextStyle(color: iscommunity?Colors.black:Colors.white),)),
-                  ElevatedButton(onPressed: (){
-                    setState(() {
-                      islatest=false;
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    SizedBox(
+                      width: 20,
+                    ),
+                    ElevatedButton(onPressed: (){
+                      islatest=true;
                       iscommunity=false;
-                      isabout=true;
-                    });
-                  },
-                      style: ButtonStyle(backgroundColor: MaterialStatePropertyAll(isabout?Colors.white:Colors.grey[900])),
-                      child: Text('About',style: TextStyle(color: isabout?Colors.black:Colors.white),)),
-                ],
+                      isabout=false;
+                      isplaylist=false;
+                    },
+                        style: ButtonStyle(backgroundColor: MaterialStatePropertyAll(islatest?Colors.white:Colors.grey[900])),
+                        child: Text('Latest',style: TextStyle(color: islatest?Colors.black:Colors.white),)),
+                    SizedBox(
+                      width: 20,
+                    ),
+                    ElevatedButton(onPressed: (){
+                      setState(() {
+                        islatest=false;
+                        iscommunity=true;
+                        isabout=false;
+                        isplaylist=false;
+                      });
+                    },
+                        style: ButtonStyle(backgroundColor: MaterialStatePropertyAll(iscommunity?Colors.white:Colors.grey[900])),
+                        child: Text('Community',style: TextStyle(color: iscommunity?Colors.black:Colors.white),)),
+                    SizedBox(
+                      width: 20,
+                    ),
+                    ElevatedButton(onPressed: (){
+                      setState(() {
+                        islatest=false;
+                        iscommunity=false;
+                        isabout=true;
+                        isplaylist=false;
+                      });
+                    },
+                        style: ButtonStyle(backgroundColor: MaterialStatePropertyAll(isabout?Colors.white:Colors.grey[900])),
+                        child: Text('About',style: TextStyle(color: isabout?Colors.black:Colors.white),)),
+                    SizedBox(
+                      width: 20,
+                    ),
+                    ElevatedButton(onPressed: (){
+                      setState(() {
+                        islatest=false;
+                        iscommunity=false;
+                        isabout=false;
+                        isplaylist=true;
+                      });
+                    },
+                        style: ButtonStyle(backgroundColor: MaterialStatePropertyAll(isplaylist?Colors.white:Colors.grey[900])),
+                        child: Text('Playlists',style: TextStyle(color: isplaylist?Colors.black:Colors.white),)),
+                    SizedBox(
+                      width: 20,
+                    ),
+                  ],
+                ),
               ),
               SizedBox(
                 height: 50,
@@ -944,7 +983,7 @@ class _SearchedUserState extends State<SearchedUser> {
                 ):Container(),
               iscommunity?Column(
                 children: [
-                  Padding(
+                 widget.UID==user!.uid? Padding(
                     padding: EdgeInsets.symmetric(horizontal: 30),
                     child: TextField(
                       style: GoogleFonts.abyssinicaSil(color: Colors.white),
@@ -970,7 +1009,7 @@ class _SearchedUserState extends State<SearchedUser> {
                           hintStyle: GoogleFonts.abyssinicaSil(color: Colors.white)
                       ),
                     ),
-                  ),
+                  ):Container(),
                   SizedBox(
                     height: 50,
                   ),
