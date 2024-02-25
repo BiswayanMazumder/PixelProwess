@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 import 'package:flutter/cupertino.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:pixelprowess/Pages/test_video_if.dart';
@@ -297,7 +298,7 @@ class _AccountpageState extends State<Accountpage> {
     fetchData();
 
     // Set up a timer to fetch data every 2 seconds
-    Timer.periodic(Duration(seconds: 2), (timer) {
+    Timer.periodic(Duration(milliseconds: 2), (timer) {
       fetchData();
     });
   }
@@ -323,10 +324,11 @@ class _AccountpageState extends State<Accountpage> {
     await fetchusername();
     await fetchprofilepic();
     await fetchcoverpic();
-    await fetchAllDocuments();
     await fetchbio();
     await fetchcommunityposts();
     await fetchCommunityUploadDate();
+    await fetchplaylistid();
+    await fetchplaylistname();
   }
   int views_video=0;
   List<String>communityposts=[];
@@ -422,27 +424,143 @@ class _AccountpageState extends State<Accountpage> {
       print('Error: $e');
     }
   }
-  List<Map<String, dynamic>> playlistDocs = [];
 
-  Future<void> fetchAllDocuments() async {
+  Future<String> generateUniqueRandomNumber() async {
+    String randomCombination = ''; // Initialize with an empty string
+    bool unique = false;
+
+    // Keep generating until a unique combination is found
+    while (!unique) {
+      randomCombination = _generateRandomCombination();
+      unique = await _checkUniqueCombination(randomCombination);
+    }
+
+    // Store the random combination as a document name in Firestore
+    await _storeRandomCombination(randomCombination);
+
+    return randomCombination;
+  }
+
+  Future<bool> _checkUniqueCombination(String combination) async {
+    // Check if the combination already exists in Firestore array
+    QuerySnapshot querySnapshot =
+    await _firestore.collection('Global Playlists').get();
+    for (QueryDocumentSnapshot document in querySnapshot.docs) {
+      List<dynamic> numbers = document['VID'];
+      if (numbers.contains(combination)) {
+        return false; // Combination already exists, not unique
+      }
+    }
+    return true; // Combination is unique
+  }
+
+  String _generateRandomCombination() {
+    // Generate a random combination of numbers (e.g., 6 digits)
+    Random random = Random();
+    String combination = '';
+    for (int i = 0; i < 10; i++) {
+      //earlier i=6
+      combination += random.nextInt(10).toString();
+    }
+    return combination;
+  }
+  // Future<void> _uploadImage() async {
+  //   try {
+  //     final user = _auth.currentUser;
+  //     if (user != null && _image != null) {
+  //       setState(() {
+  //         _uploading = true;
+  //       });
+  //       final ref = _storage.ref().child('profile_pictures/${user.uid}');
+  //       await ref.putFile(_image!);
+  //       final imageUrl = await ref.getDownloadURL();
+  //
+  //       await user.updateProfile(photoURL: imageUrl);
+  //
+  //       // Store the URL in Firestore
+  //       await _firestore.collection('profile_pictures').doc(user.uid).set({
+  //         'url_user1': imageUrl,
+  //         'time stamp': FieldValue.serverTimestamp(),
+  //       });
+  //       await _firestore.collection('User Details').doc(user.uid).update({
+  //         'url_user1': imageUrl,
+  //         'time stamp': FieldValue.serverTimestamp(),
+  //       });
+  //
+  //       setState(() {
+  //         _uploading = false;
+  //         _imageUrl = imageUrl;
+  //       });
+  //
+  //       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+  //         backgroundColor: Colors.green,
+  //         content: Text('Profile picture uploaded successfully!'),
+  //       ));
+  //     }
+  //   } catch (e) {
+  //     setState(() {
+  //       _uploading = false;
+  //     });
+  //     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+  //       backgroundColor: Colors.red,
+  //       content: Text('Error uploading profile picture: $e'),
+  //     ));
+  //   }
+  // }
+  Future<void> _storeRandomCombination(String combination) async {
+    // Store the combination in Firestore
+    final user = _auth.currentUser;
+    await _firestore.collection(user!.uid).doc(combination).set({
+      'Created At': DateTime.now(),
+      'Playlist Name': _playlistController.text,
+      'Uploaded UID': user!.uid,
+    });
+    await _firestore.collection('Global Playlists').doc(user.uid).set({
+      'VID': FieldValue.arrayUnion([combination]),
+    }, SetOptions(merge: true));
+    await _firestore.collection('User Uploaded Playlist ID').doc(user.uid).set({
+      'VID': FieldValue.arrayUnion([combination]),
+    }, SetOptions(merge: true));
+  }
+  List<String>playlistid=[];
+  Future<void> fetchplaylistid() async {
     final user = _auth.currentUser;
     try {
-      QuerySnapshot querySnapshot = await _firestore.collection(user!.uid).get();
-      querySnapshot.docs.forEach((doc) {
-        // Explicitly cast doc.data() to Map<String, dynamic>?
-        Map<String, dynamic>? data = doc.data() as Map<String, dynamic>?;
+      DocumentSnapshot documentSnapshot = await _firestore
+          .collection('Global Playlists')
+          .doc(user?.uid)
+          .get();
+
+      if (documentSnapshot.exists) {
+        dynamic data = documentSnapshot.data();
         if (data != null) {
-          playlistDocs.add(data);
+          List<dynamic> posts = (data['VID'] as List?) ?? [];
+          setState(() {
+            playlistid =posts.map((post) => post.toString()).toList();
+          });
         }
-      });
-
-      // Do something with playlistDocs if needed
-      print('playlists $playlistDocs');
-
+      }
+      print('playlist id $playlistid');
     } catch (e) {
-      // Handle errors
-      print('Error fetching documents: $e');
+      print('Error fetching followers videos: $e');
     }
+
+  }
+  String playlistname='';
+  List<String>Playlistname=[];
+  Future<void>fetchplaylistname()async{
+    final user=_auth.currentUser;
+    await fetchplaylistid();
+    for(String ids in playlistid){
+      final docsnap=await _firestore.collection(user!.uid).doc(ids).get();
+      if(docsnap.exists){
+        setState(() {
+          playlistname=docsnap.data()?['Playlist Name'];
+          Playlistname.add(playlistname);
+        });
+      }
+    }
+    print('playlist name $Playlistname');
   }
 
   @override
@@ -451,6 +569,7 @@ class _AccountpageState extends State<Accountpage> {
     super.initState();
     fetchIPAddress();
     fetchusername();
+    fetchplaylistname();
     fetchCommunityUploadDate();
     fetchVideoLengths();
     fetchprofilepic();
@@ -459,13 +578,13 @@ class _AccountpageState extends State<Accountpage> {
     fetchuploaddate();
     fetchsubscriber();
     fetchcaptions();
+    fetchplaylistid();
     fetchvideo();
     fetchbio();
     fetchvideoid();
     fetchviews();
     fetchcommunityposts();
     fetchUserDataPeriodically();
-    fetchAllDocuments();
   }
   TextEditingController _captionController=TextEditingController();
   @override
@@ -1177,6 +1296,7 @@ class _AccountpageState extends State<Accountpage> {
                            ),)),
                            actions: [
                              Column(
+                               crossAxisAlignment: CrossAxisAlignment.center,
                                children: [
                                  SizedBox(
                                    height: 10,
@@ -1201,15 +1321,7 @@ class _AccountpageState extends State<Accountpage> {
                                  ElevatedButton(onPressed: ()async{
                                    final user=_auth.currentUser;
                                    if(_playlistController.text.isNotEmpty)
-                                   {
-                                     await _firestore.collection(user!.uid).doc(_playlistController.text).set(
-                                         {
-                                           'Playlist creation time': FieldValue.serverTimestamp(),
-                                           'name':_playlistController.text,
-                                         }
-                                     );
-
-                                   }
+                                     await generateUniqueRandomNumber();
                                    Navigator.pop(context);
                                    _playlistController.clear();
                                  },
@@ -1234,16 +1346,44 @@ class _AccountpageState extends State<Accountpage> {
                     )
                   ],
                 ),
-                ListView.builder(
-                  itemCount: playlistDocs.length,
-                  itemBuilder: (BuildContext context, int index) {
-                    String docString = jsonEncode(playlistDocs[index]);
-                    return ListTile(
-                      title: Text('Document ${index + 1}'),
-                      subtitle: Text(docString,style: TextStyle(color: Colors.white),),
-                    );
-                  },
-                )
+                SizedBox(
+                  height: 25,
+                ),
+                Text('Playlist Names',style: GoogleFonts.abyssinicaSil(color: Colors.white,
+                fontWeight: FontWeight.bold,fontSize: 20
+                ),),
+                SizedBox(
+                  height: 40,
+                ),
+                for(int i=0;i<playlistid.length;i++)
+                  Column(
+                    children: [
+                      Row(
+                        children: [
+                          SizedBox(
+                            width: 20,
+                          ),
+                          InkWell(
+                            onTap: (){},
+                            child: Image.network('https://thisis-images.spotifycdn.com/37i9dQZF1DZ06evO3iW9AR-default.jpg',
+                              height: 150,
+                              width: 150,
+                            ),
+                          ),
+                          SizedBox(
+                            width: 20,
+                          ),
+                          InkWell(
+                            onTap: (){},
+                            child: Text('${Playlistname[i]}',style: GoogleFonts.abyssinicaSil(color: Colors.white,fontSize: 18),),
+                          )
+                        ],
+                      ),
+                      SizedBox(
+                        height: 25,
+                      ),
+                    ],
+                  )
               ],
             ):Container(),
         ]),
