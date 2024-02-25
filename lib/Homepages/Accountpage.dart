@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
+import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:pixelprowess/Pages/test_video_if.dart';
@@ -64,69 +65,28 @@ class _AccountpageState extends State<Accountpage> {
       uploaddate.sort();
     });
   }
-  Future<void> _uploadImage() async {
-    try {
-      final user = _auth.currentUser;
-      if (user != null && _image != null) {
-        setState(() {
-          _uploading = true;
-        });
-        final ref = _storage.ref().child('profile_pictures/${user.uid}');
-        await ref.putFile(_image!);
-        final imageUrl = await ref.getDownloadURL();
-
-        await user.updateProfile(photoURL: imageUrl);
-
-        // Store the URL in Firestore
-        await _firestore.collection('profile_pictures').doc(user.uid).set({
-          'url_user1': imageUrl,
-          'time stamp': FieldValue.serverTimestamp(),
-        });
-        await _firestore.collection('User Details').doc(user.uid).update({
-          'url_user1': imageUrl,
-          'time stamp': FieldValue.serverTimestamp(),
-        });
-
-        setState(() {
-          _uploading = false;
-          _imageUrl = imageUrl;
-        });
-
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          backgroundColor: Colors.green,
-          content: Text('Profile picture uploaded successfully!'),
-        ));
-      }
-    } catch (e) {
-      setState(() {
-        _uploading = false;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        backgroundColor: Colors.red,
-        content: Text('Error uploading profile picture: $e'),
-      ));
-    }
-  }
+  bool _upload=true;
   Future<void> _pickImage() async {
     final user = _auth.currentUser;
     if (user!.emailVerified) {
-      final pickedFile = await _imagePicker.pickImage(source: ImageSource.gallery);
+      final pickedFile =
+      await _imagePicker.pickImage(source: ImageSource.gallery);
       if (pickedFile != null) {
         setState(() {
           _image = File(pickedFile.path);
+          _upload = false;
         });
-        _uploadImage();
       }
     } else {
-      final pickedFile = await _imagePicker.pickImage(source: ImageSource.gallery);
+      final pickedFile =
+      await _imagePicker.pickImage(source: ImageSource.gallery);
       if (pickedFile != null) {
         setState(() {
           _image = File(pickedFile.path);
+          _upload = false;
         });
-        _uploadImage();
       }
     }
-
   }
   Future<void>fetchusername()async{
     final user=_auth.currentUser;
@@ -298,7 +258,7 @@ class _AccountpageState extends State<Accountpage> {
     fetchData();
 
     // Set up a timer to fetch data every 2 seconds
-    Timer.periodic(Duration(milliseconds: 2), (timer) {
+    Timer.periodic(Duration(milliseconds: 100), (timer) {
       fetchData();
     });
   }
@@ -464,56 +424,22 @@ class _AccountpageState extends State<Accountpage> {
     }
     return combination;
   }
-  // Future<void> _uploadImage() async {
-  //   try {
-  //     final user = _auth.currentUser;
-  //     if (user != null && _image != null) {
-  //       setState(() {
-  //         _uploading = true;
-  //       });
-  //       final ref = _storage.ref().child('profile_pictures/${user.uid}');
-  //       await ref.putFile(_image!);
-  //       final imageUrl = await ref.getDownloadURL();
-  //
-  //       await user.updateProfile(photoURL: imageUrl);
-  //
-  //       // Store the URL in Firestore
-  //       await _firestore.collection('profile_pictures').doc(user.uid).set({
-  //         'url_user1': imageUrl,
-  //         'time stamp': FieldValue.serverTimestamp(),
-  //       });
-  //       await _firestore.collection('User Details').doc(user.uid).update({
-  //         'url_user1': imageUrl,
-  //         'time stamp': FieldValue.serverTimestamp(),
-  //       });
-  //
-  //       setState(() {
-  //         _uploading = false;
-  //         _imageUrl = imageUrl;
-  //       });
-  //
-  //       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-  //         backgroundColor: Colors.green,
-  //         content: Text('Profile picture uploaded successfully!'),
-  //       ));
-  //     }
-  //   } catch (e) {
-  //     setState(() {
-  //       _uploading = false;
-  //     });
-  //     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-  //       backgroundColor: Colors.red,
-  //       content: Text('Error uploading profile picture: $e'),
-  //     ));
-  //   }
-  // }
   Future<void> _storeRandomCombination(String combination) async {
     // Store the combination in Firestore
     final user = _auth.currentUser;
+      setState(() {
+        _uploading = true;
+      });
+      final ref = _storage.ref().child('Playlist Images/${user!.uid}/$combination');
+      await ref.putFile(_image!);
+      final imageUrl = await ref.getDownloadURL();
+
+      await user.updateProfile(photoURL: imageUrl);
     await _firestore.collection(user!.uid).doc(combination).set({
       'Created At': DateTime.now(),
       'Playlist Name': _playlistController.text,
       'Uploaded UID': user!.uid,
+      'Image URL':_imageUrl
     });
     await _firestore.collection('Global Playlists').doc(user.uid).set({
       'VID': FieldValue.arrayUnion([combination]),
@@ -521,6 +447,10 @@ class _AccountpageState extends State<Accountpage> {
     await _firestore.collection('User Uploaded Playlist ID').doc(user.uid).set({
       'VID': FieldValue.arrayUnion([combination]),
     }, SetOptions(merge: true));
+    setState(() {
+      _uploading = false;
+      _imageUrl = imageUrl;
+    });
   }
   List<String>playlistid=[];
   Future<void> fetchplaylistid() async {
@@ -548,6 +478,8 @@ class _AccountpageState extends State<Accountpage> {
   }
   String playlistname='';
   List<String>Playlistname=[];
+  String playlistdp='';
+  List<String> Playlistdp=[];
   Future<void>fetchplaylistname()async{
     final user=_auth.currentUser;
     await fetchplaylistid();
@@ -557,6 +489,8 @@ class _AccountpageState extends State<Accountpage> {
         setState(() {
           playlistname=docsnap.data()?['Playlist Name'];
           Playlistname.add(playlistname);
+          playlistdp=docsnap.data()?['Image URL'];
+          Playlistdp.add(playlistdp);
         });
       }
     }
@@ -1318,9 +1252,58 @@ class _AccountpageState extends State<Accountpage> {
                                  SizedBox(
                                    height: 20,
                                  ),
+                                 Center(child: Text('Playlist Image',style: GoogleFonts.abyssinicaSil(color: Colors.white,
+                                     fontSize:15
+                                 ),)),
+                                 SizedBox(
+                                   height: 20,
+                                 ),
+                                 DottedBorder(
+                                     borderType: BorderType.RRect,
+                                     radius: Radius.circular(8),
+                                     color: Colors.white,
+                                     dashPattern: [10,4],
+                                     strokeCap: StrokeCap.round,
+                                     child: Container(
+                                       width: double.infinity,
+                                       height: 200,
+                                       color:Colors.grey.withOpacity(0.3),
+                                       child: _upload
+                                           ? IconButton(
+                                         onPressed: _pickImage,
+                                         icon: Icon(Icons.upload, color: CupertinoColors.white),
+                                       )
+                                           : _image != null
+                                           ? Container(
+                                         width: double.infinity,
+                                         height: 200,
+                                         decoration: BoxDecoration(
+                                           shape: BoxShape.rectangle,
+                                           image: DecorationImage(
+                                             image: FileImage(_image!),
+                                             fit: BoxFit.fitWidth,
+                                           ),
+                                         ),
+                                         child: IconButton(
+                                           onPressed: () {
+                                             setState(() {
+                                               _upload = true;
+                                               _image = null;
+                                             });
+                                           },
+                                           icon: Icon(CupertinoIcons.clear,
+                                               color: Colors.black),
+                                         ),
+                                       )
+                                           : Container(),
+                                     )
+                                 ),
+                                 SizedBox(
+                                   height: 20,
+                                 ),
                                  ElevatedButton(onPressed: ()async{
                                    final user=_auth.currentUser;
-                                   if(_playlistController.text.isNotEmpty)
+                                   if(_playlistController.text.isNotEmpty && _image!=null)
                                      await generateUniqueRandomNumber();
                                    Navigator.pop(context);
                                    _playlistController.clear();
@@ -1331,6 +1314,7 @@ class _AccountpageState extends State<Accountpage> {
                                ],
                              )
                            ],
+                           scrollable: true,
                          );
                        },) ;
                       },
@@ -1365,7 +1349,7 @@ class _AccountpageState extends State<Accountpage> {
                           ),
                           InkWell(
                             onTap: (){},
-                            child: Image.network('https://thisis-images.spotifycdn.com/37i9dQZF1DZ06evO3iW9AR-default.jpg',
+                            child: Image.network(Playlistdp[i],
                               height: 150,
                               width: 150,
                             ),
@@ -1376,11 +1360,69 @@ class _AccountpageState extends State<Accountpage> {
                           InkWell(
                             onTap: (){},
                             child: Text('${Playlistname[i]}',style: GoogleFonts.abyssinicaSil(color: Colors.white,fontSize: 18),),
-                          )
+                          ),
+                          Spacer(),
+                          IconButton(onPressed: (){
+                            showDialog(context: context,
+                                builder: (context) {
+                                  return AlertDialog(
+                                    scrollable: true,
+                                    backgroundColor: Colors.black,
+                                    title: Text('Edit Your Playlist Details',style: TextStyle(color: Colors.white,fontSize: 20),),
+                                    actions: [
+                                      Column(
+                                        children: [
+                                          SizedBox(
+                                            height: 25,
+                                          ),
+                                          Center(
+                                            child: Text('Playlist Names',style: GoogleFonts.abyssinicaSil(color: Colors.white,
+                                                fontWeight: FontWeight.bold,fontSize: 15
+                                            ),),
+                                          ),
+                                          SizedBox(
+                                            height: 25,
+                                          ),
+                                          TextField(
+                                            controller: _playlistController,
+                                            decoration: InputDecoration(
+                                                hintText: Playlistname[i],
+                                                fillColor: Colors.grey,
+                                                filled: true
+                                            ),
+                                          ),
+                                          SizedBox(
+                                            height: 25,
+                                          ),
+                                          ElevatedButton(onPressed: ()async{
+                                            final user=_auth.currentUser;
+                                            print('Playlist id ${playlistid[i]}');
+                                            if(_playlistController.text.isNotEmpty)
+                                              await _firestore.collection(user!.uid).doc(playlistid[i]).update(
+                                                  {
+                                                    'Playlist Name':_playlistController.text,
+                                                    'Edited at':FieldValue.serverTimestamp(),
+                                                  });
+                                            Navigator.pop(context);
+                                            setState(() {
+                                              Playlistname[i]=_playlistController.text;
+                                            });
+                                            _playlistController.clear();
+
+                                          },
+                                            child: Text('Edit',style: TextStyle(color: Colors.black),),
+                                            style: ButtonStyle(backgroundColor: MaterialStatePropertyAll(Colors.green)),
+                                          )
+                                        ],
+                                      )
+                                    ],
+                                  );
+                                },);
+                          }, icon: Icon(Icons.more_vert,color: Colors.white,))
                         ],
                       ),
                       SizedBox(
-                        height: 25,
+                        height: 50,
                       ),
                     ],
                   )

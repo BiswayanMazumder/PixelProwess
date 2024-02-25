@@ -368,12 +368,14 @@ class _LandingPageState extends State<LandingPage> {
     int _currentTappedIndex = -1;
     return Scaffold(
       backgroundColor: Colors.black,
-      floatingActionButton: FloatingActionButton(onPressed: (){
-        Navigator.push(context, MaterialPageRoute(builder: (context) =>support_sections(),));
-      },
-        child: Image.network('https://firebasestorage.googleapis.com/v0/b/pixelprowess69.appspot.com/o/_8660cb60-'
-            '4a5d-4e49-99a0-b523e5d961df.jpg?alt=media&token=8a1246cf-5e6f-44c2-aab1-a4397f5c8509'),
-      backgroundColor: Colors.red,
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(context, MaterialPageRoute(builder: (context) => support_sections(),));
+        },
+        child: Image.network(
+            'https://firebasestorage.googleapis.com/v0/b/pixelprowess69.appspot.com/o/_8660cb60-'
+                '4a5d-4e49-99a0-b523e5d961df.jpg?alt=media&token=8a1246cf-5e6f-44c2-aab1-a4397f5c8509'),
+        backgroundColor: Colors.red,
       ),
       appBar: AppBar(
         backgroundColor: Colors.black,
@@ -381,12 +383,12 @@ class _LandingPageState extends State<LandingPage> {
         actions: [
           Row(
             children: [
-              // IconButton(onPressed: (){
-              //   Navigator.push(context, MaterialPageRoute(builder: (context) => Notification_Page(),));
-              // }, icon: Icon(Icons.notifications_outlined,color: Colors.white,)),
-              IconButton(onPressed: (){
-                Navigator.push(context, MaterialPageRoute(builder: (context) => SearchPage(),));
-              }, icon: AnimatedIcon(icon: AnimatedIcons.ellipsis_search, progress: kAlwaysCompleteAnimation,color: Colors.white,))
+              IconButton(
+                  onPressed: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => SearchPage(),));
+                  },
+                  icon: AnimatedIcon(icon: AnimatedIcons.ellipsis_search, progress: kAlwaysCompleteAnimation,color: Colors.white,)
+              )
             ],
           )
         ],
@@ -400,12 +402,10 @@ class _LandingPageState extends State<LandingPage> {
               imageError: 'Failed To Load Image',
               image: 'https://emkldzxxityxmjkxiggw.supabase.co/storage/v1/object/public/PixelProwess/_3983829c-0a3e-4628-9b05-4eec15080e79.jpg',
             ),
-            SizedBox(
-              width: 10,
-            ),
+            SizedBox(width: 10,),
             Animate(
               effects: [FadeEffect(), ScaleEffect()],
-              child: Text('𝓟𝓲𝔁𝓮𝓵𝓟𝓻𝓸𝔀𝓮𝓼𝓼',style: GoogleFonts.arbutusSlab(color: Colors.white),),
+              child: Text('𝓟𝓲𝔁𝓮𝓵𝓟𝓻𝓸𝔀𝓮𝓼𝓼', style: GoogleFonts.arbutusSlab(color: Colors.white),),
             )
           ],
         ),
@@ -415,300 +415,257 @@ class _LandingPageState extends State<LandingPage> {
         onRefresh: fetchviews,
         showChildOpacityTransition: false,
         child: SingleChildScrollView(
-          child: _loadeddatetime && _loadedviews &&_loadedviews &&_loadedcaptions &&_loadedthumbnail
-              &&_loadeduseruid &&loadedusernames &&_loadeddp?Column(
+          child: (captions.isEmpty || videoid.isEmpty || videos.isEmpty || thumbnail.isEmpty || USernames.isEmpty || uploadeduseruid.isEmpty || Profileurls.isEmpty)
+              ? Center(
+            child: CircularProgressIndicator(
+              backgroundColor: Colors.red,
+              color: Colors.white,
+            ),
+          )
+              : _loadeddatetime &&
+              _loadedviews &&
+              _loadedviews &&
+              _loadedcaptions &&
+              _loadedthumbnail &&
+              _loadeduseruid &&
+              loadedusernames &&
+              _loadeddp ? Column(
             children: [
-              for(int i=0;i<captions.length;i++)
+              for(int i = 0; i < captions.length; i++)
                 Column(
                   children: [
-                    SizedBox(
-                      height: 20,
-                    ),
+                    SizedBox(height: 20,),
                     Stack(
                       children: [
-                       InkWell(
-                            onTap: ()async{
+                        InkWell(
+                          onTap: () async {
+                            if (i < videoid.length &&
+                                i < videos.length &&
+                                i < thumbnail.length &&
+                                i < USernames.length &&
+                                i < uploadeduseruid.length &&
+                                i < Profileurls.length) {
                               print(' clicked $i and Video fetched ${videos[i]}');
-                              Navigator.push(context, MaterialPageRoute(builder: (context) => VideoPage(caption: captions[i],
-                                  uploaddate: uploaddate[i],
-                                  Index: i,
-                                  VideoID:  videoid[i],
-                                  viddeourl: videos[i],
-                                  views: views[i],
-                                  thumbnail: thumbnail[i],
-                                  username: USernames[i],
-                                  UID: uploadeduseruid[i],
-                                  profilepicurl: Profileurls[i]),));
-                              final docsnap=await _firestore.collection('Global Post').doc(videoid[i]).get();
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => VideoPage(
+                                    caption: captions[i],
+                                    uploaddate: uploaddate[i],
+                                    Index: i,
+                                    VideoID:  videoid[i],
+                                    viddeourl: videos[i],
+                                    views: views[i],
+                                    thumbnail: thumbnail[i],
+                                    username: USernames[i],
+                                    UID: uploadeduseruid[i],
+                                    profilepicurl: Profileurls[i]
+                                )),
+                              );
+                              final docsnap = await _firestore.collection('Global Post').doc(videoid[i]).get();
                               if(docsnap.exists){
-                                views_video=docsnap.data()?['Views'];
+                                views_video = docsnap.data()?['Views'];
                               }
                               await _firestore.collection('Global Post').doc(videoid[i]).update(
-                                  {
-                                    'Views':views_video+1
-                                  });
+                                  {'Views': views_video + 1}
+                              );
                               print('index $i');
-                            },
-                            child: Container(
-                              decoration: BoxDecoration(
-                                  border:Border.all(
-                                      color: Colors.white
-                                  )
-                              ),
-                              child: ProgressiveImage(
-                                height: 300,
-                                width: 1280,
-                                baseColor: Colors.grey.shade900,
-                                highlightColor: Colors.white,
-                                imageError: 'Failed To Load Image',
-                                image: thumbnail[i],
-                              ),
-                            )
+                            }
+                          },
+                          child: Container(
+                            decoration: BoxDecoration(
+                                border: Border.all(color: Colors.white)
+                            ),
+                            child: ProgressiveImage(
+                              height: 300,
+                              width: 1280,
+                              baseColor: Colors.grey.shade900,
+                              highlightColor: Colors.white,
+                              imageError: 'Failed To Load Image',
+                              image: i < thumbnail.length ? thumbnail[i] : '',
+                            ),
+                          ),
                         ),
-                        // if(videoLengths.isNotEmpty)
-                        //   Positioned(
-                        //     bottom: 5,
-                        //     right: 5,
-                        //     child: Text(
-                        //       '${videoLengths[i].toString().split('.').first}',
-                        //       // Converts Duration to string and removes milliseconds
-                        //       style: TextStyle(
-                        //         color: Colors.white,
-                        //         fontSize: 12,
-                        //         fontWeight: FontWeight.bold,
-                        //       ),
-                        //     ),
-                        //   ),
                       ],
                     ),
-                    SizedBox(
-                      height: 20,
-                    ),
+                    SizedBox(height: 20,),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
-                        SizedBox(
-                          width: 20,
-                        ),
+                        SizedBox(width: 20,),
                         InkWell(
-                          onTap: (){
-                            Navigator.push(context, MaterialPageRoute(builder: (context) => SearchedUser(UID: uploadeduseruid[i]),));
+                          onTap: () {
+                            if (i < uploadeduseruid.length) {
+                              Navigator.push(context, MaterialPageRoute(builder: (context) => SearchedUser(UID: uploadeduseruid[i]),));
+                            }
                           },
                           child: CircleAvatar(
-                            backgroundImage: NetworkImage(Profileurls[i]),
+                            backgroundImage: i < Profileurls.length
+                                ? NetworkImage(Profileurls[i])
+                                : AssetImage('placeholder_image_path') as ImageProvider<Object>?,
+
                           ),
                         ),
-                        SizedBox(
-                          width: 10,
-                        ),
+                        SizedBox(width: 10,),
                         InkWell(
-                            onTap: (){
-                              Navigator.push(context, MaterialPageRoute(builder: (context) => VideoPage(caption: captions[i],
-                                  uploaddate: uploaddate[i],
-                                  Index: i,
-                                  VideoID:  videoid[i],
-                                  viddeourl: videos[i],
-                                  views: views[i],
-                                  thumbnail: thumbnail[i],
-                                  username: USernames[i],
-                                  UID: uploadeduseruid[i],
-                                  profilepicurl: Profileurls[i]),));
+                            onTap: () {
+                              if (i < captions.length) {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => VideoPage(
+                                      caption: captions[i],
+                                      uploaddate: uploaddate[i],
+                                      Index: i,
+                                      VideoID:  videoid[i],
+                                      viddeourl: videos[i],
+                                      views: views[i],
+                                      thumbnail: thumbnail[i],
+                                      username: USernames[i],
+                                      UID: uploadeduseruid[i],
+                                      profilepicurl: Profileurls[i]
+                                  )),
+                                );
+                              }
                             },
-                            child: Text(captions[i],style: GoogleFonts.arbutusSlab(color: Colors.white,fontSize: 15),)),
+                            child: Text(captions[i], style: GoogleFonts.arbutusSlab(color: Colors.white, fontSize: 15),)
+                        ),
                         Spacer(),
                         IconButton(onPressed: ()async{
                           showDialog(context: context,
-                              builder:(context) {
-                                return AlertDialog(
-                                  backgroundColor: Colors.grey.withOpacity(0.89),
-                                  title: Center(
-                                    child: Text('More Options',style: GoogleFonts.arbutusSlab(color: Colors.white,fontWeight: FontWeight.bold,
-                                        fontSize: 15
-                                    ),),
-                                  ),
-                                  actions: [
-                                    Center(
-                                      child: Column(
-                                        children: [
+                            builder:(context) {
+                              return AlertDialog(
+                                backgroundColor: Colors.grey.withOpacity(0.89),
+                                title: Center(
+                                  child: Text('More Options',style: GoogleFonts.arbutusSlab(color: Colors.white,fontWeight: FontWeight.bold,
+                                      fontSize: 15
+                                  ),),
+                                ),
+                                actions: [
+                                  Center(
+                                    child: Column(
+                                      children: [
+                                        InkWell(
+                                          onTap:()async{
+                                            final user=_auth.currentUser;
+                                            await _firestore.collection('Reports').doc(uploadeduseruid[i]).set(
+                                                {
+                                                  'Reports':FieldValue.arrayUnion([
+                                                    {
+                                                      'User ID':user!.uid,
+                                                      'Video ID':videoid[i],
+                                                      'Captions':captions[i],
+                                                      'Usernames':USernames[i],
+                                                      'Profile Pic':Profileurls[i],
+                                                      'Report Accepted':false,
+                                                      'Time Of Reporting':DateTime.now(),
+                                                    }
+                                                  ])
+                                                },SetOptions(merge: true));
+                                            Navigator.pop(context);
+                                          },
+                                          child: Text('Report Video',style: GoogleFonts.arbutusSlab(color: Colors.white,
+                                              fontWeight: FontWeight.w300),),
+                                        ),
+                                        SizedBox(
+                                          height: 20,
+                                        ),
+                                        if(savedvideoid.contains(videoid[i]))
                                           InkWell(
                                             onTap:()async{
+                                              Navigator.pop(context);
                                               final user=_auth.currentUser;
-                                              await _firestore.collection('Reports').doc(uploadeduseruid[i]).set(
+                                              await _firestore.collection('Users Saved Videos').doc(user!.uid).update(
                                                   {
-                                                    'Reports':FieldValue.arrayUnion([
+                                                    'Saved Video Details':FieldValue.arrayRemove([
                                                       {
+                                                        'Thumbnail': thumbnail[i],
+                                                        'Video Link':videos[i],
                                                         'User ID':user!.uid,
+                                                        'Profile Picture':Profileurls[i],
+                                                        'Username':USernames[i],
                                                         'Video ID':videoid[i],
-                                                        'Captions':captions[i],
-                                                        'Usernames':USernames[i],
-                                                        'Profile Pic':Profileurls[i],
-                                                        'Report Accepted':false,
-                                                        'Time Of Reporting':DateTime.now(),
+                                                      }
+                                                    ])
+                                                  });
+                                              // Navigator.push(context, MaterialPageRoute(builder: (context) => EditProfile(),));
+                                            },
+                                            child: Text('Remove from watch later',style: GoogleFonts.arbutusSlab(color: Colors.white,
+                                                fontWeight: FontWeight.w300),),
+                                          ),
+                                        if(!savedvideoid.contains(videoid[i]))
+                                          InkWell(
+                                            onTap:()async{
+                                              Navigator.pop(context);
+                                              final user=_auth.currentUser;
+                                              await _firestore.collection('Users Saved Videos').doc(user!.uid).set(
+                                                  {
+                                                    'Saved Video Details':FieldValue.arrayUnion([
+                                                      {
+                                                        'Thumbnail': thumbnail[i],
+                                                        'Video Link':videos[i],
+                                                        'User ID':user!.uid,
+                                                        'Profile Picture':Profileurls[i],
+                                                        'Username':USernames[i],
+                                                        'Video ID':videoid[i],
                                                       }
                                                     ])
                                                   },SetOptions(merge: true));
-                                              Navigator.pop(context);
+                                              // Navigator.push(context, MaterialPageRoute(builder: (context) => EditProfile(),));
                                             },
-                                            child: Text('Report Video',style: GoogleFonts.arbutusSlab(color: Colors.white,
+                                            child: Text('Add to watch later',style: GoogleFonts.arbutusSlab(color: Colors.white,
                                                 fontWeight: FontWeight.w300),),
                                           ),
-                                          SizedBox(
-                                            height: 20,
-                                          ),
-                                          if(savedvideoid.contains(videoid[i]))
-                                            InkWell(
-                                              onTap:()async{
-                                                Navigator.pop(context);
-                                                final user=_auth.currentUser;
-                                                await _firestore.collection('Users Saved Videos').doc(user!.uid).update(
-                                                    {
-                                                      'Saved Video Details':FieldValue.arrayRemove([
-                                                        {
-                                                          'Thumbnail': thumbnail[i],
-                                                          'Video Link':videos[i],
-                                                          'User ID':user!.uid,
-                                                          'Profile Picture':Profileurls[i],
-                                                          'Username':USernames[i],
-                                                          'Video ID':videoid[i],
-                                                        }
-                                                      ])
-                                                    });
-                                                // Navigator.push(context, MaterialPageRoute(builder: (context) => EditProfile(),));
-                                              },
-                                              child: Text('Remove from watch later',style: GoogleFonts.arbutusSlab(color: Colors.white,
-                                                  fontWeight: FontWeight.w300),),
-                                            ),
-                                          if(!savedvideoid.contains(videoid[i]))
-                                            InkWell(
-                                              onTap:()async{
-                                                Navigator.pop(context);
-                                                final user=_auth.currentUser;
-                                                await _firestore.collection('Users Saved Videos').doc(user!.uid).set(
-                                                    {
-                                                      'Saved Video Details':FieldValue.arrayUnion([
-                                                        {
-                                                          'Thumbnail': thumbnail[i],
-                                                          'Video Link':videos[i],
-                                                          'User ID':user!.uid,
-                                                          'Profile Picture':Profileurls[i],
-                                                          'Username':USernames[i],
-                                                          'Video ID':videoid[i],
-                                                        }
-                                                      ])
-                                                    },SetOptions(merge: true));
-                                                // Navigator.push(context, MaterialPageRoute(builder: (context) => EditProfile(),));
-                                              },
-                                              child: Text('Add to watch later',style: GoogleFonts.arbutusSlab(color: Colors.white,
-                                                  fontWeight: FontWeight.w300),),
-                                            ),
-                                          SizedBox(
-                                            height: 20,
-                                          ),
-                                          if(!queueuvideoid.contains(videoid[i]))
-                                            InkWell(
-                                              onTap: ()async{
-                                                final user=_auth.currentUser;
-                                                await _firestore.collection('Queue').doc(user!.uid).set(
-                                                    {
-                                                      'Queue UIDs':FieldValue.arrayUnion(
-                                                        [
-                                                          videoid[i]
-                                                        ]
-                                                      )
-                                                    },SetOptions(merge: true));
-                                                Navigator.pop(context);
-                                              },
-                                              child: Text('Add to Queue',style: GoogleFonts.arbutusSlab(color: Colors.white,fontWeight: FontWeight.w300),),
-                                            ),
-                                          if(queueuvideoid.contains(videoid[i]))
-                                            InkWell(
-                                              onTap: ()async{
-                                                final user=_auth.currentUser;
-                                                await _firestore.collection('Queue').doc(user!.uid).update(
-                                                    {
-                                                      'Queue UIDs':FieldValue.arrayRemove([
-                                                        videoid[i]
-                                                      ])
-                                                    });
-                                                Navigator.pop(context);
-                                              },
-                                              child: Text('Remove from Queue',style: GoogleFonts.arbutusSlab(color: Colors.white,fontWeight: FontWeight.w300),),
-                                            )
-                                        ],
-                                      ),
-                                    )
-                                  ],
-                                );
-                              },);
+                                        SizedBox(
+                                          height: 10,
+                                        ),
+                                      ],
+                                    ),
+                                  )
+                                ],
+                              );
+                            },);
                         }, icon: Icon(Icons.more_vert,color: Colors.white,))
                       ],
                     ),
-                    SizedBox(
-                      height: 1,
-                    ),
+                    SizedBox(height: 1,),
                     Row(
                       children: [
-                        SizedBox(
-                          width: 70,
-                        ),
-                        //[Biswayan Mazumder, Biswayan Mazumder, Biswayan Mazumder, CodeZify-Flutter Developer , CodeZify-Flutter Developer , CodeZify-Flutter Developer , Biswayan Mazumder]
-                        //[0LrVRSIKdRVgAWWVt9Qhv8PguJG3, 0LrVRSIKdRVgAWWVt9Qhv8PguJG3, 0LrVRSIKdRVgAWWVt9Qhv8PguJG3, h0YLztPREjeQeV2ELA9iFu0qGNa2, h0YLztPREjeQeV2ELA9iFu0qGNa2, h0YLztPREjeQeV2ELA9iFu0qGNa2, 0LrVRSIKdRVgAWWVt9Qhv8PguJG3]
+                        SizedBox(width: 70,),
                         InkWell(
-                            onTap: (){
-                              Navigator.push(context, MaterialPageRoute(builder: (context) => SearchedUser(UID: uploadeduseruid[i]),));
+                            onTap: () {
+                              if (i < uploadeduseruid.length) {
+                                Navigator.push(context, MaterialPageRoute(builder: (context) => SearchedUser(UID: uploadeduseruid[i]),));
+                              }
                             },
-                            child: Text('${USernames[i]}', style: TextStyle(color: Colors.grey, fontSize: 12))),
-                        SizedBox(
-                          width: 10,
+                            child: Text('${USernames[i]}', style: TextStyle(color: Colors.grey, fontSize: 12))
                         ),
-                        if (views[i] == 0)
-                          Text('No Views', style: TextStyle(color: Colors.grey,fontSize: 12)),
-                        if (views[i] == 1)
-                          Text('${views[i]} View', style: TextStyle(color: Colors.grey,fontSize: 12)),
-                        if (views[i] > 1 && views[i]<=999)
-                          Text('${views[i]} Views', style: TextStyle(color: Colors.grey,fontSize: 12)),
-                        if (views[i] >= 10000 && views[i]<=100000)
-                          Text('${(views[i] ~/ 1000)}K Views', style: TextStyle(color: Colors.grey, fontSize: 12)),
-                        if (views[i] > 100000 && views[i]<=9999999)
-                          Text('${(views[i] ~/ 10000)}M Views', style: TextStyle(color: Colors.grey, fontSize: 12)),
-
-                        SizedBox(
-                          width: 5,
-                        ),
-                        Text(
-                          '${timeago.format(uploaddate[i], locale: 'en_long', allowFromNow: true)}', // Format the upload date
-                          style: TextStyle(color: Colors.grey,fontSize: 12),
-                        ),
+                        SizedBox(width: 10,),
+                        if (i < views.length && i < uploaddate.length)
+                          Text(
+                              '${views[i]} Views • ${timeago.format(uploaddate[i], locale: 'en_long', allowFromNow: true)}',
+                              style: TextStyle(color: Colors.grey, fontSize: 12)
+                          ),
                       ],
                     ),
-                    SizedBox(
-                      height: 20,
-                    ),
+                    SizedBox(height: 20,),
                   ],
                 ),
-              SizedBox(
-                height: 20,
-              ),
+              SizedBox(height: 20,),
             ],
-          ):Column(
+          ) : Column(
             children: [
-              SizedBox(
-                height: 50,
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircularProgressIndicator(
+              SizedBox(height: 50,),
+              Center(
+                  child: CircularProgressIndicator(
                     backgroundColor: Colors.red,
                     color: Colors.white,
                   )
-                ],
-              ),
+              )
             ],
           ),
         ),
       ),
     );
+
   }
   @override
   void dispose() {
