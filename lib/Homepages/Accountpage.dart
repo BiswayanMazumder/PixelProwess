@@ -7,6 +7,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:pixelprowess/Pages/test_video_if.dart';
 import 'package:pixelprowess/Pages/upload_page.dart';
+import 'package:pixelprowess/Playlists/playlist_homepage.dart';
 import 'package:pixelprowess/Saved_videos/Watch_later.dart';
 import 'package:pixelprowess/Video%20Card/VideoCard.dart';
 import 'package:pixelprowess/main.dart';
@@ -1348,7 +1349,14 @@ class _AccountpageState extends State<Accountpage> {
                             width: 20,
                           ),
                           InkWell(
-                            onTap: (){},
+                            onTap: (){
+                              Navigator.push(context, MaterialPageRoute(builder: (context) =>
+                                Playlist_Page(playlistimage: Playlistdp[i],
+                                    playlistid: playlistid[i],
+                                    userdp: profilepicurl,
+                                    playlistname: Playlistname[i],
+                                    playlist_owner: username),));
+                            },
                             child: Image.network(Playlistdp[i],
                               height: 150,
                               width: 150,
@@ -1358,7 +1366,14 @@ class _AccountpageState extends State<Accountpage> {
                             width: 20,
                           ),
                           InkWell(
-                            onTap: (){},
+                            onTap: (){
+                              Navigator.push(context, MaterialPageRoute(builder: (context) =>
+                                  Playlist_Page(playlistimage: Playlistdp[i],
+                                      playlistid: playlistid[i],
+                                      playlistname: Playlistname[i],
+                                      userdp: profilepicurl,
+                                      playlist_owner: username),));
+                            },
                             child: Text('${Playlistname[i]}',style: GoogleFonts.abyssinicaSil(color: Colors.white,fontSize: 18),),
                           ),
                           Spacer(),
