@@ -494,6 +494,9 @@ class _AccountpageState extends State<Accountpage> {
           Playlistdp.add(playlistdp);
         });
       }
+      if(!docsnap.exists){
+        Playlistdp.add('https://emkldzxxityxmjkxiggw.supabase.co/storage/v1/object/public/PixelProwess/_3983829c-0a3e-4628-9b05-4eec15080e79.jpg');
+      }
     }
     print('playlist name $Playlistname');
   }

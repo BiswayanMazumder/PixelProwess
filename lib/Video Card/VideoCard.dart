@@ -727,7 +727,6 @@ class _VideoPageState extends State<VideoPage> {
     fetchvideo();
     fetchsubscriber();
     // fetchusernames();
-    fetchVideoLengths();
     fetchdislikedusers();
     fetchsubscribers();
     fetchUserDataPeriodically();

@@ -337,11 +337,60 @@ class _LandingPageState extends State<LandingPage> {
     await fetchqueuevideoid();
     // await fetchvideoids();
   }
+  List<String>playlistid=[];
+  Future<void> fetchplaylistid() async {
+    final user = _auth.currentUser;
+    try {
+      DocumentSnapshot documentSnapshot = await _firestore
+          .collection('Global Playlists')
+          .doc(user?.uid)
+          .get();
+
+      if (documentSnapshot.exists) {
+        dynamic data = documentSnapshot.data();
+        if (data != null) {
+          List<dynamic> posts = (data['VID'] as List?) ?? [];
+          setState(() {
+            playlistid =posts.map((post) => post.toString()).toList();
+          });
+        }
+      }
+      print('playlist id homepage $playlistid');
+    } catch (e) {
+      print('Error fetching followers videos: $e');
+    }
+
+  }
+  String playlistname='';
+  List<String>Playlistname=[];
+  String playlistdp='';
+  List<String> Playlistdp=[];
+  Future<void>fetchplaylistname()async{
+    final user=_auth.currentUser;
+    await fetchplaylistid();
+    for(String ids in playlistid){
+      final docsnap=await _firestore.collection(user!.uid).doc(ids).get();
+      if(docsnap.exists){
+        setState(() {
+          playlistname=docsnap.data()?['Playlist Name'];
+          Playlistname.add(playlistname);
+          playlistdp=docsnap.data()?['Image URL'];
+          Playlistdp.add(playlistdp);
+        });
+      }
+      if(!docsnap.exists){
+        Playlistdp.add('https://emkldzxxityxmjkxiggw.supabase.co/storage/v1/object/public/PixelProwess/_3983829c-0a3e-4628-9b05-4eec15080e79.jpg');
+      }
+    }
+    print('playlist name homepage $Playlistname');
+  }
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     fetchvideoid();
+    fetchplaylistid();
+    fetchplaylistname();
     fetchcaptions();
     fetchthumbnail();
     fetchuploaddate();
@@ -615,8 +664,36 @@ class _LandingPageState extends State<LandingPage> {
                                                 fontWeight: FontWeight.w300),),
                                           ),
                                         SizedBox(
-                                          height: 10,
+                                          height: 20,
                                         ),
+                                        for(int b=0;b<playlistid.length;b++)
+                                          Column(
+                                            children: [
+                                              InkWell(
+                                                onTap:()async{
+                                                  await _firestore.collection('User Uploaded Playlist ID').doc(playlistid[b]).set(
+                                                      {
+                                                        'VIDs':FieldValue.arrayUnion([
+                                                          videoid[i]
+                                                        ])
+                                                      },SetOptions(merge: true));
+                                                  Navigator.pop(context);
+                                                  ScaffoldMessenger.of(context).showSnackBar(
+                                                    SnackBar(
+                                                      backgroundColor: Colors.green,
+                                                      content: Text('Successfully added to ${Playlistname[b]}'),
+                                                      duration: Duration(seconds: 2),
+                                                    ),
+                                                  );
+                                                },
+                                                child: Text('Add to playlist ${Playlistname[b]}',style: GoogleFonts.arbutusSlab(color: Colors.white,
+                                                    fontWeight: FontWeight.w300),),
+                                              ),
+                                              SizedBox(
+                                                height: 20,
+                                              ),
+                                            ],
+                                          ),
                                       ],
                                     ),
                                   )
