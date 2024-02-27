@@ -609,6 +609,13 @@ class _LandingPageState extends State<LandingPage> {
                                                     }
                                                   ])
                                                 },SetOptions(merge: true));
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(
+                                                backgroundColor: Colors.green,
+                                                content: Text('Reported Successfully'),
+                                                duration: Duration(seconds: 10),
+                                              ),
+                                            );
                                             Navigator.pop(context);
                                           },
                                           child: Text('Report Video',style: GoogleFonts.arbutusSlab(color: Colors.white,

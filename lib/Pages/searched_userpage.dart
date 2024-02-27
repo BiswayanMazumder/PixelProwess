@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:pixelprowess/Pages/test_video_if.dart';
 import 'package:pixelprowess/Pages/upload_page.dart';
+import 'package:pixelprowess/Playlists/playlist_homepage.dart';
 import 'package:pixelprowess/Video%20Card/VideoCard.dart';
 import 'package:pixelprowess/main.dart';
 import 'package:timeago/timeago.dart'as timeago;
@@ -462,13 +463,102 @@ class _SearchedUserState extends State<SearchedUser> {
     await fetchCommunityUploadDate();
   }
   int views_video=0;
+  String playlistname='';
+  List<String>Playlistname=[];
+  String playlistdp='';
+  List<String> Playlistdp=[];
+  Future<void>fetchplaylistname()async{
+    final user=_auth.currentUser;
+    await fetchplaylistid();
+    for(String ids in playlistid){
+      final docsnap=await _firestore.collection(widget.UID).doc(ids).get();
+      if(docsnap.exists){
+        setState(() {
+          playlistname=docsnap.data()?['Playlist Name'];
+          Playlistname.add(playlistname);
+          playlistdp=docsnap.data()?['Image URL'];
+          Playlistdp.add(playlistdp);
+        });
+      }
+      if(!docsnap.exists){
+        Playlistdp.add('https://emkldzxxityxmjkxiggw.supabase.co/storage/v1/object/public/PixelProwess/_3983829c-0a3e-4628-9b05-4eec15080e79.jpg');
+      }
+    }
+    print('playlist name $Playlistname');
+  }
+  List<String>playlistid=[];
+  Future<void> fetchplaylistid() async {
+    final user = _auth.currentUser;
+    try {
+      DocumentSnapshot documentSnapshot = await _firestore
+          .collection('Global Playlists')
+          .doc(widget.UID)
+          .get();
+
+      if (documentSnapshot.exists) {
+        dynamic data = documentSnapshot.data();
+        if (data != null) {
+          List<dynamic> posts = (data['VID'] as List?) ?? [];
+          setState(() {
+            playlistid =posts.map((post) => post.toString()).toList();
+          });
+        }
+      }
+      print('playlist id $playlistid');
+    } catch (e) {
+      print('Error fetching followers videos: $e');
+    }
+
+  }
+  bool ispublic=true;
+  List<String>publicity=[];
+  // Future<void> fetchpublicstatus()async{
+  //   final user=_auth.currentUser;
+  //   await fetchplaylistid();
+  //   for(String ids in playlistid)
+  //     {
+  //       final docsnap=await _firestore.collection(widget.UID).doc(ids).get();
+  //       if(docsnap.exists){
+  //         setState(() {
+  //           publicity=posts.map((post) => post['Public'].toString()).toList();
+  //         });
+  //       }
+  //     }
+  // }
+  Future<void> fetchpublicstatus() async {
+    final user = _auth.currentUser;
+    await fetchplaylistid();
+    for (String ids in playlistid)
+      try {
+        DocumentSnapshot documentSnapshot = await _firestore
+            .collection(widget.UID)
+            .doc(ids)
+            .get();
+
+        if (documentSnapshot.exists) {
+          dynamic data = documentSnapshot.data();
+          if (data != null && data['Public'] is List) {
+            List<dynamic> publicList = data['Public'];
+            setState(() {
+              publicity = publicList.map((post) => post.toString()).toList();
+            });
+          }
+        }
+        print('publicity id $publicity');
+      } catch (e) {
+        print('Error fetching followers playlist: $e');
+      }
+  }
+
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     fetchusername();
+    fetchplaylistname();
     fetchVideoLengths();
     fetchprofilepic();
+    fetchplaylistid();
     fetchthumbnail();
     fetchcoverpic();
     fetchuploaddate();
@@ -477,6 +567,7 @@ class _SearchedUserState extends State<SearchedUser> {
     fetchbio();
     fetchemail();
     fetchsubscriber();
+    fetchpublicstatus();
     fetchvideoid();
     fetchviews();
     fetchUserDataPeriodically();
@@ -1137,6 +1228,61 @@ class _SearchedUserState extends State<SearchedUser> {
                       Text(' $ipAddress',style: GoogleFonts.abyssinicaSil(color: Colors.white,fontSize: 15),),
                     ],
                   ),
+                ],
+              ):Container(),
+              isplaylist?Column(
+                children: [
+                  Text('Playlist Names',style: GoogleFonts.abyssinicaSil(color: Colors.white,
+                      fontWeight: FontWeight.bold,fontSize: 20
+                  ),),
+                  SizedBox(
+                    height: 40,
+                  ),
+                  for(int i=0;i<playlistid.length;i++)
+                    Column(
+                      children: [
+                          Row(
+                            children: [
+                              SizedBox(
+                                width: 20,
+                              ),
+                                InkWell(
+                                  onTap: (){
+                                    Navigator.push(context, MaterialPageRoute(builder: (context) =>
+                                        Playlist_Page(playlistimage: Playlistdp[i],
+                                            playlistid: playlistid[i],
+                                            userdp: profilepicurl,
+                                            ischangeable: false,
+                                            playlistname: Playlistname[i],
+                                            playlist_owner: username),));
+                                  },
+                                  child: Image.network(Playlistdp[i],
+                                    height: 150,
+                                    width: 150,
+                                  ),
+                                ),
+                              SizedBox(
+                                width: 20,
+                              ),
+                                InkWell(
+                                  onTap: (){
+                                    Navigator.push(context, MaterialPageRoute(builder: (context) =>
+                                        Playlist_Page(playlistimage: Playlistdp[i],
+                                            playlistid: playlistid[i],
+                                            playlistname: Playlistname[i],
+                                            userdp: profilepicurl,
+                                            ischangeable: true,
+                                            playlist_owner: username),));
+                                  },
+                                  child: Text('${Playlistname[i]}',style: GoogleFonts.abyssinicaSil(color: Colors.white,fontSize: 18),),
+                                ),
+                            ],
+                          ),
+                        SizedBox(
+                          height: 50,
+                        ),
+                      ],
+                    )
                 ],
               ):Container(),
               SizedBox(

@@ -1357,6 +1357,7 @@ class _AccountpageState extends State<Accountpage> {
                                 Playlist_Page(playlistimage: Playlistdp[i],
                                     playlistid: playlistid[i],
                                     userdp: profilepicurl,
+                                    ischangeable: true,
                                     playlistname: Playlistname[i],
                                     playlist_owner: username),));
                             },
@@ -1375,6 +1376,7 @@ class _AccountpageState extends State<Accountpage> {
                                       playlistid: playlistid[i],
                                       playlistname: Playlistname[i],
                                       userdp: profilepicurl,
+                                      ischangeable: true,
                                       playlist_owner: username),));
                             },
                             child: Text('${Playlistname[i]}',style: GoogleFonts.abyssinicaSil(color: Colors.white,fontSize: 18),),
@@ -1416,16 +1418,18 @@ class _AccountpageState extends State<Accountpage> {
                                             final user=_auth.currentUser;
                                             print('Playlist id ${playlistid[i]}');
                                             if(_playlistController.text.isNotEmpty)
-                                              await _firestore.collection(user!.uid).doc(playlistid[i]).update(
-                                                  {
-                                                    'Playlist Name':_playlistController.text,
-                                                    'Edited at':FieldValue.serverTimestamp(),
-                                                  });
-                                            Navigator.pop(context);
-                                            setState(() {
-                                              Playlistname[i]=_playlistController.text;
-                                            });
-                                            _playlistController.clear();
+                                              {
+                                                await _firestore.collection(user!.uid).doc(playlistid[i]).update(
+                                                    {
+                                                      'Playlist Name':_playlistController.text,
+                                                      'Edited at':FieldValue.serverTimestamp(),
+                                                    });
+                                                Navigator.pop(context);
+                                                setState(() {
+                                                  Playlistname[i]=_playlistController.text;
+                                                });
+                                                _playlistController.clear();
+                                              }
 
                                           },
                                             child: Text('Edit',style: TextStyle(color: Colors.black),),
@@ -1439,6 +1443,7 @@ class _AccountpageState extends State<Accountpage> {
                           }, icon: Icon(Icons.more_vert,color: Colors.white,))
                         ],
                       ),
+
                       SizedBox(
                         height: 50,
                       ),

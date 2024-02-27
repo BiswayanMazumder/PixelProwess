@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'dart:ui';
 import 'package:timeago/timeago.dart'as timeago;
 import 'package:google_fonts/google_fonts.dart';
@@ -12,12 +13,14 @@ class Playlist_Page extends StatefulWidget {
   final String playlistid;
   final String playlist_owner;
   final String userdp;
+  bool ischangeable;
   Playlist_Page({
     required this.playlistimage,
     required this.playlistid,
     required this.playlistname,
     required this.playlist_owner,
     required this.userdp,
+    required this.ischangeable,
   });
 
   @override
@@ -282,295 +285,321 @@ class _Playlist_PageState extends State<Playlist_Page> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-        Stack(
-        children: [
-        // Foreground Image
-        Image.network(
-          widget.playlistimage, // Replace this with your image asset
-          fit: BoxFit.cover,
-          height: MediaQuery.of(context).size.height,
-          width: MediaQuery.of(context).size.width,
-        ),
-        // Background Blur
-        Positioned.fill(
-          child: ClipRect(
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-              child: Container(
-                color: Colors.black.withOpacity(0.8), // Adjust opacity as needed
-              ),
-            ),
-          ),
-        ),
-        // Content
-        Center(
-          child: Column(
-            children: [
-              SizedBox(
-                height: 20,
-              ),
-              Row(
+            if (uploaddate.isEmpty || captions.isEmpty || thumbnail.isEmpty ||
+                Profileurls.isEmpty || views.isEmpty || videoid.isEmpty ||
+                videos.isEmpty || uploadeduseruid.isEmpty)
+              Column(
                 children: [
-                  IconButton(onPressed: (){
-                    Navigator.pop(context);
-                  }, icon: Icon(CupertinoIcons.back,color: Colors.white,))
-                ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircleAvatar(
-                    radius:15,
-                    backgroundImage: NetworkImage(widget.userdp),
-                  ),
-                  SizedBox(
-                    width: 10,
-                  ),
-                  Column(
-                    children: [
-                      Text(widget.playlist_owner,style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold),),
-                      if(ispublic)
-                        Text('Public',style: GoogleFonts.aBeeZee(color: Colors.grey),),
-                      if(!ispublic)
-                        Text('Private',style: GoogleFonts.aBeeZee(color: Colors.grey),),
-                      InkWell(
-                          onTap: ()async{
-                            setState(() {
-                              ispublic=!ispublic;
-                            });
-                            final user=_auth.currentUser;
-                            if(ispublic)
-                              await _firestore.collection(user!.uid).doc(widget.playlistid).update(
-                                  {
-                                    'Public':true
-                                  });
-                            if(!ispublic)
-                              await _firestore.collection(user!.uid).doc(widget.playlistid).update(
-                                  {
-                                    'Public':false
-                                  });
-                          },
-                          child: Text('Change',style: GoogleFonts.aBeeZee(color: Colors.green),)),
-                    ],
+                  SizedBox(height: 50,),
+                  Center(
+                      child: CircularProgressIndicator(
+                        backgroundColor: Colors.red,
+                        color: Colors.white,
+                      )
                   )
                 ],
               ),
-                  SizedBox(
-                    height: 50,
+            if(uploaddate.isNotEmpty && captions.isNotEmpty && thumbnail.isNotEmpty && Profileurls.isNotEmpty && views.isNotEmpty
+                && videoid.isNotEmpty && videos.isNotEmpty && uploadeduseruid.isNotEmpty)
+              Stack(
+                children: [
+                  // Foreground Image
+                  Image.network(
+                    widget.playlistimage, // Replace this with your image asset
+                    fit: BoxFit.cover,
+                    height: MediaQuery.of(context).size.height,
+                    width: MediaQuery.of(context).size.width,
                   ),
+                  // Background Blur
+                  Positioned.fill(
+                    child: ClipRect(
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+                        child: Container(
+                          color: Colors.black.withOpacity(0.8), // Adjust opacity as needed
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Content
                   Center(
-                    child: Image.network(widget.playlistimage,width: 250,height: 250,),
-                  ),
-              SizedBox(
-                height: 20,
-              ),
-              Text(widget.playlistname,style: TextStyle(color: Colors.white,
-                  fontWeight: FontWeight.bold,fontSize: 20
-              ),),
-              SizedBox(
-                height: 20,
-              ),
-              Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(bio,style: GoogleFonts.abyssinicaSil(color: Colors.grey,fontSize: 15,),),
-                ],
-              ),
-              SizedBox(
-                height: 20,
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  CircleAvatar(
-                    backgroundColor: Colors.black,
-                    child: IconButton(onPressed: (){}, icon: Icon(Icons.download_outlined,color: Colors.white,)),
-                  ),
-                  CircleAvatar(
-                    backgroundColor: Colors.black,
-                    child: IconButton(onPressed: ()async{
-                      final user=_auth.currentUser;
-                      showDialog(context: context, builder: (context) {
-                        return AlertDialog(
-                          backgroundColor: Colors.black,
-                          title: Center(
-                              child: Text('Edit Bio',style: TextStyle(color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                fontSize: 15
-                              ),)),
-                          actions: [
+                    child: Column(
+                      children: [
+                        SizedBox(
+                          height: 20,
+                        ),
+                        Row(
+                          children: [
+                            IconButton(onPressed: (){
+                              Navigator.pop(context);
+                            }, icon: Icon(CupertinoIcons.back,color: Colors.white,))
+                          ],
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            CircleAvatar(
+                              radius:15,
+                              backgroundImage: NetworkImage(widget.userdp),
+                            ),
+                            SizedBox(
+                              width: 10,
+                            ),
                             Column(
                               children: [
-                                SizedBox(
-                                  height: 25,
-                                ),
-                                Center(
-                                  child: Text('Playlist Bio',style: GoogleFonts.abyssinicaSil(color: Colors.white,
-                                      fontWeight: FontWeight.bold,fontSize: 15
-                                  ),),
-                                ),
-                                SizedBox(
-                                  height: 25,
-                                ),
-                                TextField(
-                                  controller: _bioController,
-                                  decoration: InputDecoration(
-                                      hintText:bio,
-                                      fillColor: Colors.grey,
-                                      filled: true
-                                  ),
-                                ),
-                                SizedBox(
-                                  height: 25,
-                                ),
-                                ElevatedButton(onPressed: ()async{
-                                  final user=_auth.currentUser;
-                                  if(_bioController.text.isNotEmpty)
-                                    await _firestore.collection(user!.uid).doc(widget.playlistid).update(
-                                        {
-                                          'Bio':_bioController.text,
-                                          'Edited at':FieldValue.serverTimestamp(),
+                                Text(widget.playlist_owner,style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold),),
+                                if(ispublic)
+                                  Text('Public',style: GoogleFonts.aBeeZee(color: Colors.grey),),
+                                if(!ispublic)
+                                  Text('Private',style: GoogleFonts.aBeeZee(color: Colors.grey),),
+                                if(widget.ischangeable)
+                                  InkWell(
+                                      onTap: ()async{
+                                        setState(() {
+                                          ispublic=!ispublic;
                                         });
-                                  Navigator.pop(context);
-                                  setState(() {
-                                    bio=_bioController.text;
-                                  });
-                                  _bioController.clear();
-
-                                },
-                                  child: Text('Edit',style: TextStyle(color: Colors.black),),
-                                  style: ButtonStyle(backgroundColor: MaterialStatePropertyAll(Colors.green)),
-                                )
+                                        final user=_auth.currentUser;
+                                        if(ispublic)
+                                          await _firestore.collection(user!.uid).doc(widget.playlistid).update(
+                                              {
+                                                'Public':true
+                                              });
+                                        if(!ispublic)
+                                          await _firestore.collection(user!.uid).doc(widget.playlistid).update(
+                                              {
+                                                'Public':false
+                                              });
+                                      },
+                                      child: Text('Change',style: GoogleFonts.aBeeZee(color: Colors.green),)),
                               ],
                             )
                           ],
-                        );
-                      },);
-                    }, icon: Icon(Icons.edit,color: Colors.white,)),
-                  ),
-                  CircleAvatar(
-                    backgroundColor: Colors.white,
-                    child: IconButton(onPressed: (){
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => VideoPage(
-                          caption: captions[0],
-                          uploaddate:uploaddate[0] ,
-                          Index: 0,
-                          viddeourl: videos[0],
-                          views: views[0],
-                          thumbnail: thumbnail[0],
-                          username: USernames[0],
-                          profilepicurl: Profileurls[0],
-                          UID: uploadeduseruid[0],
-                          VideoID: videoid[0]),));
-                    }, icon: Icon(Icons.play_arrow,color: Colors.black,)),
-                  ),
-                  CircleAvatar(
-                    backgroundColor: Colors.black,
-                    child: IconButton(onPressed: (){}, icon: Icon(Icons.share_rounded,color: Colors.white,)),
-                  ),
-                  CircleAvatar(
-                    backgroundColor: Colors.black,
-                    child: IconButton(onPressed: (){}, icon: Icon(Icons.more_vert,color: Colors.white,)),
+                        ),
+                        SizedBox(
+                          height: 50,
+                        ),
+                        Center(
+                          child: Image.network(widget.playlistimage,width: 250,height: 250,),
+                        ),
+                        SizedBox(
+                          height: 20,
+                        ),
+                        Text(widget.playlistname,style: TextStyle(color: Colors.white,
+                            fontWeight: FontWeight.bold,fontSize: 20
+                        ),),
+                        SizedBox(
+                          height: 20,
+                        ),
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(bio,style: GoogleFonts.abyssinicaSil(color: Colors.grey,fontSize: 15,),),
+                          ],
+                        ),
+                        SizedBox(
+                          height: 20,
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            CircleAvatar(
+                              backgroundColor: Colors.black,
+                              child: IconButton(onPressed: (){}, icon: Icon(Icons.download_outlined,color: Colors.white,)),
+                            ),
+                            if(widget.ischangeable)
+                              CircleAvatar(
+                                backgroundColor: Colors.black,
+                                child: IconButton(onPressed: ()async{
+                                  final user=_auth.currentUser;
+                                  showDialog(context: context, builder: (context) {
+                                    return AlertDialog(
+                                      backgroundColor: Colors.black,
+                                      title: Center(
+                                          child: Text('Edit Bio',style: TextStyle(color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 15
+                                          ),)),
+                                      actions: [
+                                        Column(
+                                          children: [
+                                            SizedBox(
+                                              height: 25,
+                                            ),
+                                            Center(
+                                              child: Text('Playlist Bio',style: GoogleFonts.abyssinicaSil(color: Colors.white,
+                                                  fontWeight: FontWeight.bold,fontSize: 15
+                                              ),),
+                                            ),
+                                            SizedBox(
+                                              height: 25,
+                                            ),
+                                            TextField(
+                                              controller: _bioController,
+                                              decoration: InputDecoration(
+                                                  hintText:bio,
+                                                  fillColor: Colors.grey,
+                                                  filled: true
+                                              ),
+                                            ),
+                                            SizedBox(
+                                              height: 25,
+                                            ),
+                                            ElevatedButton(onPressed: ()async{
+                                              final user=_auth.currentUser;
+                                              if(_bioController.text.isNotEmpty)
+                                                await _firestore.collection(user!.uid).doc(widget.playlistid).update(
+                                                    {
+                                                      'Bio':_bioController.text,
+                                                      'Edited at':FieldValue.serverTimestamp(),
+                                                    });
+                                              Navigator.pop(context);
+                                              setState(() {
+                                                bio=_bioController.text;
+                                              });
+                                              _bioController.clear();
+
+                                            },
+                                              child: Text('Edit',style: TextStyle(color: Colors.black),),
+                                              style: ButtonStyle(backgroundColor: MaterialStatePropertyAll(Colors.green)),
+                                            )
+                                          ],
+                                        )
+                                      ],
+                                    );
+                                  },);
+                                }, icon: Icon(Icons.edit,color: Colors.white,)),
+                              ),
+                            CircleAvatar(
+                              backgroundColor: Colors.white,
+                              child: IconButton(onPressed: (){
+                                Navigator.push(context, MaterialPageRoute(builder: (context) => VideoPage(
+                                    caption: captions[0],
+                                    uploaddate:uploaddate[0] ,
+                                    Index: 0,
+                                    viddeourl: videos[0],
+                                    views: views[0],
+                                    thumbnail: thumbnail[0],
+                                    username: USernames[0],
+                                    profilepicurl: Profileurls[0],
+                                    UID: uploadeduseruid[0],
+                                    VideoID: videoid[0]),));
+                              }, icon: Icon(Icons.play_arrow,color: Colors.black,)),
+                            ),
+                            CircleAvatar(
+                              backgroundColor: Colors.black,
+                              child: IconButton(onPressed: (){
+                                Clipboard.setData(ClipboardData(text: 'www.pixelprowess.com/playlist/${widget.playlistid}/share=${widget.ischangeable}'));
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Center(child: Text('Copied Successfully')),
+                                    backgroundColor: Colors.green,
+                                  ),
+                                );
+                              }, icon: Icon(Icons.share_rounded,color: Colors.white,)),
+                            ),
+                            CircleAvatar(
+                              backgroundColor: Colors.black,
+                              child: IconButton(onPressed: (){}, icon: Icon(Icons.more_vert,color: Colors.white,)),
+                            ),
+                          ],
+                        ),
+                        if(thumbnails.isNotEmpty && captions.isNotEmpty)
+                          for(int i=0;i<videoid.length;i++)
+                            Column(
+                              children: [
+                                Row(
+                                  children: [
+                                    SizedBox(
+                                      width: 10,
+                                    ),
+                                    InkWell(
+                                      onTap: (){
+                                        Navigator.push(context, MaterialPageRoute(builder: (context) => VideoPage(
+                                            caption: captions[i],
+                                            uploaddate:uploaddate[i] ,
+                                            Index: i,
+                                            viddeourl: videos[i],
+                                            views: views[i],
+                                            thumbnail: thumbnail[i],
+                                            username: USernames[i],
+                                            profilepicurl: Profileurls[i],
+                                            UID: uploadeduseruid[i],
+                                            VideoID: videoid[i]),));
+                                      },
+                                      child: Image.network(thumbnail[i],height: 150,width: 150,),
+                                    ),
+                                    SizedBox(
+                                      width: 10,
+                                    ),
+                                    Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(captions[i],style: GoogleFonts.abyssinicaSil(color: Colors.white,fontWeight: FontWeight.bold),),
+                                        Row(
+                                          children: [
+                                            Text(
+                                                '${views[i]} Views • ${timeago.format(uploaddate[i], locale: 'en_long', allowFromNow: true)}',
+                                                style: TextStyle(color: Colors.grey, fontSize: 12)
+                                            ),
+                                          ],
+                                        ),
+
+                                      ],
+                                    ),
+                                    Spacer(),
+                                   if(widget.ischangeable)
+                                     IconButton(onPressed: ()async{
+                                       showDialog(context: context, builder: (context) {
+                                         return AlertDialog(
+                                           backgroundColor: Colors.black,
+                                           title: Center(child: Text('Delete The Video',style: GoogleFonts.abyssinicaSil(color: Colors.white,fontSize: 15),)),
+                                           actions: [
+                                             Column(
+                                               crossAxisAlignment: CrossAxisAlignment.center,
+                                               children: [
+                                                 Text('Video once deleted cannot be recovered and added to the playlist.\n'
+                                                     '\nAre you Sure?',style: GoogleFonts.abyssinicaSil(
+                                                     color: Colors.red,fontSize: 15,fontWeight: FontWeight.bold
+                                                 ),),
+                                                 SizedBox(
+                                                   height: 20,
+                                                 ),
+                                                 Row(
+                                                   mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                                   children: [
+                                                     ElevatedButton(onPressed: (){}, child: Text('Go Back',style: TextStyle(color: Colors.black),
+                                                     ),
+                                                       style: ButtonStyle(backgroundColor: MaterialStatePropertyAll(Colors.green)),
+                                                     ),
+                                                     ElevatedButton(onPressed: ()async{
+                                                       await _firestore.collection('User Uploaded Playlist ID').doc(widget.playlistid).update(
+                                                           {
+                                                             'VIDs':FieldValue.arrayRemove([
+                                                               videoid[i]
+                                                             ])
+                                                           });
+                                                       Navigator.pop(context);
+                                                     }, child: Text('Delete',style: TextStyle(color: Colors.white),
+                                                     ),
+                                                       style: ButtonStyle(backgroundColor: MaterialStatePropertyAll(Colors.red)),
+                                                     ),
+                                                   ],
+                                                 )
+                                               ],
+                                             )
+                                           ],
+                                         );
+                                       },);
+                                     }, icon: Icon(Icons.more_vert,color: Colors.white,))
+                                  ],
+                                ),
+                              ],
+                            ),
+                        SizedBox(height: 50),
+                      ],
+                    ),
                   ),
                 ],
               ),
-              if(thumbnails.isNotEmpty && captions.isNotEmpty)
-                for(int i=0;i<videoid.length;i++)
-                  Column(
-                    children: [
-                      Row(
-                        children: [
-                          SizedBox(
-                            width: 10,
-                          ),
-                          InkWell(
-                            onTap: (){
-                              Navigator.push(context, MaterialPageRoute(builder: (context) => VideoPage(
-                                  caption: captions[i],
-                                  uploaddate:uploaddate[i] ,
-                                  Index: i,
-                                  viddeourl: videos[i],
-                                  views: views[i],
-                                  thumbnail: thumbnail[i],
-                                  username: USernames[i],
-                                  profilepicurl: Profileurls[i],
-                                  UID: uploadeduseruid[i],
-                                  VideoID: videoid[i]),));
-                            },
-                            child: Image.network(thumbnail[i],height: 150,width: 150,),
-                          ),
-                          SizedBox(
-                            width: 10,
-                          ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(captions[i],style: GoogleFonts.abyssinicaSil(color: Colors.white,fontWeight: FontWeight.bold),),
-                              Row(
-                                children: [
-                                  Text(
-                                      '${views[i]} Views • ${timeago.format(uploaddate[i], locale: 'en_long', allowFromNow: true)}',
-                                      style: TextStyle(color: Colors.grey, fontSize: 12)
-                                  ),
-                                ],
-                              ),
-
-                            ],
-                          ),
-                          Spacer(),
-                          IconButton(onPressed: ()async{
-                            showDialog(context: context, builder: (context) {
-                              return AlertDialog(
-                                backgroundColor: Colors.black,
-                                title: Center(child: Text('Delete The Video',style: GoogleFonts.abyssinicaSil(color: Colors.white,fontSize: 15),)),
-                                actions: [
-                                  Column(
-                                    crossAxisAlignment: CrossAxisAlignment.center,
-                                    children: [
-                                      Text('Video once deleted cannot be recovered and added to the playlist.\n'
-                                          '\nAre you Sure?',style: GoogleFonts.abyssinicaSil(
-                                        color: Colors.red,fontSize: 15,fontWeight: FontWeight.bold
-                                      ),),
-                                      SizedBox(
-                                        height: 20,
-                                      ),
-                                      Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                                        children: [
-                                          ElevatedButton(onPressed: (){}, child: Text('Go Back',style: TextStyle(color: Colors.black),
-                                          ),
-                                          style: ButtonStyle(backgroundColor: MaterialStatePropertyAll(Colors.green)),
-                                          ),
-                                          ElevatedButton(onPressed: ()async{
-                                            await _firestore.collection('User Uploaded Playlist ID').doc(widget.playlistid).update(
-                                                {
-                                                  'VIDs':FieldValue.arrayRemove([
-                                                    videoid[i]
-                                                  ])
-                                                });
-                                            Navigator.pop(context);
-                                          }, child: Text('Delete',style: TextStyle(color: Colors.white),
-                                          ),
-                                            style: ButtonStyle(backgroundColor: MaterialStatePropertyAll(Colors.red)),
-                                          ),
-                                        ],
-                                      )
-                                    ],
-                                  )
-                                ],
-                              );
-                            },);
-                          }, icon: Icon(Icons.more_vert,color: Colors.white,))
-                        ],
-                      ),
-                    ],
-                  ),
-              SizedBox(height: 50),
-            ],
-          ),
-        ),
-        ],
-      ),
     ],
         ),
       ),
