@@ -283,24 +283,9 @@ class _Playlist_PageState extends State<Playlist_Page> {
     return Scaffold(
       backgroundColor: Colors.black,
       body: SingleChildScrollView(
-        child: Column(
+        child:
+        Column(
           children: [
-            if (uploaddate.isEmpty || captions.isEmpty || thumbnail.isEmpty ||
-                Profileurls.isEmpty || views.isEmpty || videoid.isEmpty ||
-                videos.isEmpty || uploadeduseruid.isEmpty)
-              Column(
-                children: [
-                  SizedBox(height: 50,),
-                  Center(
-                      child: CircularProgressIndicator(
-                        backgroundColor: Colors.red,
-                        color: Colors.white,
-                      )
-                  )
-                ],
-              ),
-            if(uploaddate.isNotEmpty && captions.isNotEmpty && thumbnail.isNotEmpty && Profileurls.isNotEmpty && views.isNotEmpty
-                && videoid.isNotEmpty && videos.isNotEmpty && uploadeduseruid.isNotEmpty)
               Stack(
                 children: [
                   // Foreground Image
@@ -400,7 +385,7 @@ class _Playlist_PageState extends State<Playlist_Page> {
                           height: 20,
                         ),
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
                             CircleAvatar(
                               backgroundColor: Colors.black,
@@ -495,7 +480,7 @@ class _Playlist_PageState extends State<Playlist_Page> {
                                 );
                               }, icon: Icon(Icons.share_rounded,color: Colors.white,)),
                             ),
-                            CircleAvatar(
+                            widget.ischangeable?CircleAvatar(
                               backgroundColor: Colors.black,
                               child: IconButton(onPressed: (){
                                 showDialog(
@@ -530,16 +515,16 @@ class _Playlist_PageState extends State<Playlist_Page> {
                                               SizedBox(
                                                 height: 20,
                                               ),
-                                              InkWell(
+                                              widget.ischangeable?InkWell(
                                                 onTap:(){},
                                                 child: Text('Delete Playlist',style: GoogleFonts.abyssinicaSil(
                                                     color: Colors.red,fontSize: 15
                                                 ),),
-                                              ),
+                                              ):Container(),
                                               SizedBox(
                                                 height: 20,
                                               ),
-                                              InkWell(
+                                              widget.ischangeable?InkWell(
                                                 onTap:()async{
                                                   setState(() {
                                                     ispublic=!ispublic;
@@ -562,7 +547,7 @@ class _Playlist_PageState extends State<Playlist_Page> {
                                                 ),):Text('Make Public',style: GoogleFonts.abyssinicaSil(
                                                     color: Colors.green,fontSize: 15
                                                 ),),
-                                              ),
+                                              ):Container(),
                                             ],
                                           ),
                                         )
@@ -571,7 +556,7 @@ class _Playlist_PageState extends State<Playlist_Page> {
                                   },
                                 );
                               }, icon: Icon(Icons.more_vert,color: Colors.white,)),
-                            ),
+                            ):Container(),
                           ],
                         ),
                         if(thumbnails.isNotEmpty && captions.isNotEmpty)

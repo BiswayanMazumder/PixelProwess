@@ -7,6 +7,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:pixelprowess/Pages/test_video_if.dart';
 import 'package:pixelprowess/Pages/upload_page.dart';
+import 'package:pixelprowess/Playlists/edit_playlist.dart';
 import 'package:pixelprowess/Playlists/playlist_homepage.dart';
 import 'package:pixelprowess/Saved_videos/Watch_later.dart';
 import 'package:pixelprowess/Video%20Card/VideoCard.dart';
@@ -1226,101 +1227,102 @@ class _AccountpageState extends State<Accountpage> {
                     Spacer(),
                     InkWell(
                       onTap: (){
-                       showDialog(context: context, builder: (context) {
-                         return AlertDialog(
-                           backgroundColor: Colors.black,
-                           title: Center(child: Text('Playlist Details',style: GoogleFonts.abyssinicaSil(color: Colors.white,
-                           fontSize:20,fontWeight: FontWeight.bold
-                           ),)),
-                           actions: [
-                             Column(
-                               crossAxisAlignment: CrossAxisAlignment.center,
-                               children: [
-                                 SizedBox(
-                                   height: 10,
-                                 ),
-                                 Center(child: Text('Playlist Name',style: GoogleFonts.abyssinicaSil(color: Colors.white,
-                                     fontSize:15
-                                 ),)),
-                                 Padding(
-                                   padding: const EdgeInsets.all(20.0),
-                                   child: TextField(
-                                     controller: _playlistController,
-                                     decoration: InputDecoration(
-                                       hintText: 'Playlist Name',
-                                       fillColor: Colors.grey,
-                                       filled: true
-                                     ),
-                                   ),
-                                 ),
-                                 SizedBox(
-                                   height: 20,
-                                 ),
-                                 Center(child: Text('Playlist Image',style: GoogleFonts.abyssinicaSil(color: Colors.white,
-                                     fontSize:15
-                                 ),)),
-                                 SizedBox(
-                                   height: 20,
-                                 ),
-                                 DottedBorder(
-                                     borderType: BorderType.RRect,
-                                     radius: Radius.circular(8),
-                                     color: Colors.white,
-                                     dashPattern: [10,4],
-                                     strokeCap: StrokeCap.round,
-                                     child: Container(
-                                       width: double.infinity,
-                                       height: 200,
-                                       color:Colors.grey.withOpacity(0.3),
-                                       child: _upload
-                                           ? IconButton(
-                                         onPressed: _pickImage,
-                                         icon: Icon(Icons.upload, color: CupertinoColors.white),
-                                       )
-                                           : _image != null
-                                           ? Container(
-                                         width: double.infinity,
-                                         height: 200,
-                                         decoration: BoxDecoration(
-                                           shape: BoxShape.rectangle,
-                                           image: DecorationImage(
-                                             image: FileImage(_image!),
-                                             fit: BoxFit.fitWidth,
-                                           ),
-                                         ),
-                                         child: IconButton(
-                                           onPressed: () {
-                                             setState(() {
-                                               _upload = true;
-                                               _image = null;
-                                             });
-                                           },
-                                           icon: Icon(CupertinoIcons.clear,
-                                               color: Colors.black),
-                                         ),
-                                       )
-                                           : Container(),
-                                     )
-                                 ),
-                                 SizedBox(
-                                   height: 20,
-                                 ),
-                                 ElevatedButton(onPressed: ()async{
-                                   final user=_auth.currentUser;
-                                   if(_playlistController.text.isNotEmpty && _image!=null)
-                                     await generateUniqueRandomNumber();
-                                   Navigator.pop(context);
-                                   _playlistController.clear();
-                                 },
-                                     child: Text('Create',style: TextStyle(color: Colors.black),),
-                                 style: ButtonStyle(backgroundColor: MaterialStatePropertyAll(Colors.green)),
-                                 )
-                               ],
-                             )
-                           ],
-                           scrollable: true,
-                         );
-                       },) ;
+                        Navigator.push(context, MaterialPageRoute(builder: (context) => Playlist_creation(),));
+                       // showDialog(context: context, builder: (context) {
+                       //   return AlertDialog(
+                       //     backgroundColor: Colors.black,
+                       //     title: Center(child: Text('Playlist Details',style: GoogleFonts.abyssinicaSil(color: Colors.white,
+                       //     fontSize:20,fontWeight: FontWeight.bold
+                       //     ),)),
+                       //     actions: [
+                       //       Column(
+                       //         crossAxisAlignment: CrossAxisAlignment.center,
+                       //         children: [
+                       //           SizedBox(
+                       //             height: 10,
+                       //           ),
+                       //           Center(child: Text('Playlist Name',style: GoogleFonts.abyssinicaSil(color: Colors.white,
+                       //               fontSize:15
+                       //           ),)),
+                       //           Padding(
+                       //             padding: const EdgeInsets.all(20.0),
+                       //             child: TextField(
+                       //               controller: _playlistController,
+                       //               decoration: InputDecoration(
+                       //                 hintText: 'Playlist Name',
+                       //                 fillColor: Colors.grey,
+                       //                 filled: true
+                       //               ),
+                       //             ),
+                       //           ),
+                       //           SizedBox(
+                       //             height: 20,
+                       //           ),
+                       //           Center(child: Text('Playlist Image',style: GoogleFonts.abyssinicaSil(color: Colors.white,
+                       //               fontSize:15
+                       //           ),)),
+                       //           SizedBox(
+                       //             height: 20,
+                       //           ),
+                       //           DottedBorder(
+                       //               borderType: BorderType.RRect,
+                       //               radius: Radius.circular(8),
+                       //               color: Colors.white,
+                       //               dashPattern: [10,4],
+                       //               strokeCap: StrokeCap.round,
+                       //               child: Container(
+                       //                 width: double.infinity,
+                       //                 height: 200,
+                       //                 color:Colors.grey.withOpacity(0.3),
+                       //                 child: _upload
+                       //                     ? IconButton(
+                       //                   onPressed: _pickImage,
+                       //                   icon: Icon(Icons.upload, color: CupertinoColors.white),
+                       //                 )
+                       //                     : _image != null
+                       //                     ? Container(
+                       //                   width: double.infinity,
+                       //                   height: 200,
+                       //                   decoration: BoxDecoration(
+                       //                     shape: BoxShape.rectangle,
+                       //                     image: DecorationImage(
+                       //                       image: FileImage(_image!),
+                       //                       fit: BoxFit.fitWidth,
+                       //                     ),
+                       //                   ),
+                       //                   child: IconButton(
+                       //                     onPressed: () {
+                       //                       setState(() {
+                       //                         _upload = true;
+                       //                         _image = null;
+                       //                       });
+                       //                     },
+                       //                     icon: Icon(CupertinoIcons.clear,
+                       //                         color: Colors.black),
+                       //                   ),
+                       //                 )
+                       //                     : Container(),
+                       //               )
+                       //           ),
+                       //           SizedBox(
+                       //             height: 20,
+                       //           ),
+                       //           ElevatedButton(onPressed: ()async{
+                       //             final user=_auth.currentUser;
+                       //             if(_playlistController.text.isNotEmpty && _image!=null)
+                       //               await generateUniqueRandomNumber();
+                       //             Navigator.pop(context);
+                       //             _playlistController.clear();
+                       //           },
+                       //               child: Text('Create',style: TextStyle(color: Colors.black),),
+                       //           style: ButtonStyle(backgroundColor: MaterialStatePropertyAll(Colors.green)),
+                       //           )
+                       //         ],
+                       //       )
+                       //     ],
+                       //     scrollable: true,
+                       //   );
+                       // },) ;
                       },
                       child: Row(
                         children: [
@@ -1337,14 +1339,16 @@ class _AccountpageState extends State<Accountpage> {
                 SizedBox(
                   height: 25,
                 ),
-                Text('Playlist Names',style: GoogleFonts.abyssinicaSil(color: Colors.white,
-                fontWeight: FontWeight.bold,fontSize: 20
+                playlistid.isNotEmpty?Text('Playlist Names',style: GoogleFonts.abyssinicaSil(color: Colors.white,
+                    fontWeight: FontWeight.bold,fontSize: 20
+                ),):Text('Playlist Names',style: GoogleFonts.abyssinicaSil(color: Colors.white,
+                    fontWeight: FontWeight.bold,fontSize: 20
                 ),),
                 SizedBox(
                   height: 40,
                 ),
                 for(int i=0;i<playlistid.length;i++)
-                  Column(
+                  playlistid.isNotEmpty?Column(
                     children: [
                       Row(
                         children: [
@@ -1354,12 +1358,12 @@ class _AccountpageState extends State<Accountpage> {
                           InkWell(
                             onTap: (){
                               Navigator.push(context, MaterialPageRoute(builder: (context) =>
-                                Playlist_Page(playlistimage: Playlistdp[i],
-                                    playlistid: playlistid[i],
-                                    userdp: profilepicurl,
-                                    ischangeable: true,
-                                    playlistname: Playlistname[i],
-                                    playlist_owner: username),));
+                                  Playlist_Page(playlistimage: Playlistdp[i],
+                                      playlistid: playlistid[i],
+                                      userdp: profilepicurl,
+                                      ischangeable: true,
+                                      playlistname: Playlistname[i],
+                                      playlist_owner: username),));
                             },
                             child: Image.network(Playlistdp[i],
                               height: 150,
@@ -1384,71 +1388,70 @@ class _AccountpageState extends State<Accountpage> {
                           Spacer(),
                           IconButton(onPressed: (){
                             showDialog(context: context,
-                                builder: (context) {
-                                  return AlertDialog(
-                                    scrollable: true,
-                                    backgroundColor: Colors.black,
-                                    title: Text('Edit Your Playlist Details',style: TextStyle(color: Colors.white,fontSize: 20),),
-                                    actions: [
-                                      Column(
-                                        children: [
-                                          SizedBox(
-                                            height: 25,
+                              builder: (context) {
+                                return AlertDialog(
+                                  scrollable: true,
+                                  backgroundColor: Colors.black,
+                                  title: Text('Edit Your Playlist Details',style: TextStyle(color: Colors.white,fontSize: 20),),
+                                  actions: [
+                                    Column(
+                                      children: [
+                                        SizedBox(
+                                          height: 25,
+                                        ),
+                                        Center(
+                                          child: Text('Playlist Names',style: GoogleFonts.abyssinicaSil(color: Colors.white,
+                                              fontWeight: FontWeight.bold,fontSize: 15
+                                          ),),
+                                        ),
+                                        SizedBox(
+                                          height: 25,
+                                        ),
+                                        TextField(
+                                          controller: _playlistController,
+                                          decoration: InputDecoration(
+                                              hintText: Playlistname[i],
+                                              fillColor: Colors.grey,
+                                              filled: true
                                           ),
-                                          Center(
-                                            child: Text('Playlist Names',style: GoogleFonts.abyssinicaSil(color: Colors.white,
-                                                fontWeight: FontWeight.bold,fontSize: 15
-                                            ),),
-                                          ),
-                                          SizedBox(
-                                            height: 25,
-                                          ),
-                                          TextField(
-                                            controller: _playlistController,
-                                            decoration: InputDecoration(
-                                                hintText: Playlistname[i],
-                                                fillColor: Colors.grey,
-                                                filled: true
-                                            ),
-                                          ),
-                                          SizedBox(
-                                            height: 25,
-                                          ),
-                                          ElevatedButton(onPressed: ()async{
-                                            final user=_auth.currentUser;
-                                            print('Playlist id ${playlistid[i]}');
-                                            if(_playlistController.text.isNotEmpty)
-                                              {
-                                                await _firestore.collection(user!.uid).doc(playlistid[i]).update(
-                                                    {
-                                                      'Playlist Name':_playlistController.text,
-                                                      'Edited at':FieldValue.serverTimestamp(),
-                                                    });
-                                                Navigator.pop(context);
-                                                setState(() {
-                                                  Playlistname[i]=_playlistController.text;
+                                        ),
+                                        SizedBox(
+                                          height: 25,
+                                        ),
+                                        ElevatedButton(onPressed: ()async{
+                                          final user=_auth.currentUser;
+                                          print('Playlist id ${playlistid[i]}');
+                                          if(_playlistController.text.isNotEmpty)
+                                          {
+                                            await _firestore.collection(user!.uid).doc(playlistid[i]).update(
+                                                {
+                                                  'Playlist Name':_playlistController.text,
+                                                  'Edited at':FieldValue.serverTimestamp(),
                                                 });
-                                                _playlistController.clear();
-                                              }
+                                            Navigator.pop(context);
+                                            setState(() {
+                                              Playlistname[i]=_playlistController.text;
+                                            });
+                                            _playlistController.clear();
+                                          }
 
-                                          },
-                                            child: Text('Edit',style: TextStyle(color: Colors.black),),
-                                            style: ButtonStyle(backgroundColor: MaterialStatePropertyAll(Colors.green)),
-                                          )
-                                        ],
-                                      )
-                                    ],
-                                  );
-                                },);
+                                        },
+                                          child: Text('Edit',style: TextStyle(color: Colors.black),),
+                                          style: ButtonStyle(backgroundColor: MaterialStatePropertyAll(Colors.green)),
+                                        )
+                                      ],
+                                    )
+                                  ],
+                                );
+                              },);
                           }, icon: Icon(Icons.more_vert,color: Colors.white,))
                         ],
                       ),
-
                       SizedBox(
                         height: 50,
                       ),
                     ],
-                  )
+                  ):Container()
               ],
             ):Container(),
         ]),
