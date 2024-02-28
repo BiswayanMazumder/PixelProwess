@@ -457,7 +457,6 @@ class _Playlist_PageState extends State<Playlist_Page> {
                                                 bio=_bioController.text;
                                               });
                                               _bioController.clear();
-
                                             },
                                               child: Text('Edit',style: TextStyle(color: Colors.black),),
                                               style: ButtonStyle(backgroundColor: MaterialStatePropertyAll(Colors.green)),
@@ -498,7 +497,80 @@ class _Playlist_PageState extends State<Playlist_Page> {
                             ),
                             CircleAvatar(
                               backgroundColor: Colors.black,
-                              child: IconButton(onPressed: (){}, icon: Icon(Icons.more_vert,color: Colors.white,)),
+                              child: IconButton(onPressed: (){
+                                showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    return AlertDialog(
+                                      backgroundColor: Colors.black,
+                                      title: Center(
+                                        child: Text('Edit Playlist',style: GoogleFonts.abyssinicaSil(
+                                          color: Colors.white,fontSize: 20,fontWeight: FontWeight.bold
+                                        ),),
+                                      ),
+                                      actions: [
+                                        Center(
+                                          child: Column(
+                                            children: [
+                                              InkWell(
+                                                onTap:(){},
+                                                child: Text('Edit Playlist Cover Image',style: GoogleFonts.abyssinicaSil(
+                                                    color: Colors.white,fontSize: 15
+                                                ),),
+                                              ),
+                                              SizedBox(
+                                                height: 20,
+                                              ),
+                                              InkWell(
+                                                onTap:(){},
+                                                child: Text('Edit Playlist Bio',style: GoogleFonts.abyssinicaSil(
+                                                    color: Colors.white,fontSize: 15
+                                                ),),
+                                              ),
+                                              SizedBox(
+                                                height: 20,
+                                              ),
+                                              InkWell(
+                                                onTap:(){},
+                                                child: Text('Delete Playlist',style: GoogleFonts.abyssinicaSil(
+                                                    color: Colors.red,fontSize: 15
+                                                ),),
+                                              ),
+                                              SizedBox(
+                                                height: 20,
+                                              ),
+                                              InkWell(
+                                                onTap:()async{
+                                                  setState(() {
+                                                    ispublic=!ispublic;
+                                                  });
+                                                  final user=_auth.currentUser;
+                                                  if(ispublic)
+                                                    await _firestore.collection(user!.uid).doc(widget.playlistid).update(
+                                                      {
+                                                        'Public':true
+                                                      });
+                                                  if(!ispublic)
+                                                    await _firestore.collection(user!.uid).doc(widget.playlistid).update(
+                                                      {
+                                                        'Public':false
+                                                      });
+                                                  Navigator.pop(context);
+                                                },
+                                                child: ispublic?Text('Make Private',style: GoogleFonts.abyssinicaSil(
+                                                    color: Colors.red,fontSize: 15
+                                                ),):Text('Make Public',style: GoogleFonts.abyssinicaSil(
+                                                    color: Colors.green,fontSize: 15
+                                                ),),
+                                              ),
+                                            ],
+                                          ),
+                                        )
+                                      ],
+                                    );
+                                  },
+                                );
+                              }, icon: Icon(Icons.more_vert,color: Colors.white,)),
                             ),
                           ],
                         ),

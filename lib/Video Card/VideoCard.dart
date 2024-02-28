@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
@@ -767,12 +768,6 @@ class _VideoPageState extends State<VideoPage> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // VideoID:  videoid[i],
-            // viddeourl: videos[i],
-            // views: views[i],
-            // thumbnail: thumbnail[i],
-            // username: USernames[i],
-            // UID: uploadeduseruid[i],
             if(captions.isEmpty && thumbnail.isEmpty && subscriber.isEmpty && videoid.isEmpty && videos.isEmpty
             && views.isEmpty && USernames.isEmpty && uploadeduseruid.isEmpty && !_controller.value.isInitialized
             && uploaddate.isEmpty)
@@ -1168,7 +1163,7 @@ class _VideoPageState extends State<VideoPage> {
               SizedBox(
                 height: 20,
               ),
-              for(int i=0;i<captions.length;i++)
+            for (int i = 0; i < min(captions.length, min(thumbnail.length, min(videoid.length, min(views.length, min(USernames.length, min(uploadeduseruid.length, uploaddate.length)))))); i++)
                 Column(
                   children: [
                     SizedBox(

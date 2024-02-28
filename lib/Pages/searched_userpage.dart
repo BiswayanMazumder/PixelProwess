@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:circular_progress_stack/circular_progress_stack.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:pixelprowess/Pages/test_video_if.dart';
@@ -461,6 +462,7 @@ class _SearchedUserState extends State<SearchedUser> {
     await fetchbio();
     await fetchcommunityposts();
     await fetchCommunityUploadDate();
+    await fetchpublicity();
   }
   int views_video=0;
   String playlistname='';
@@ -511,45 +513,28 @@ class _SearchedUserState extends State<SearchedUser> {
 
   }
   bool ispublic=true;
-  List<String>publicity=[];
-  // Future<void> fetchpublicstatus()async{
-  //   final user=_auth.currentUser;
-  //   await fetchplaylistid();
-  //   for(String ids in playlistid)
-  //     {
-  //       final docsnap=await _firestore.collection(widget.UID).doc(ids).get();
-  //       if(docsnap.exists){
-  //         setState(() {
-  //           publicity=posts.map((post) => post['Public'].toString()).toList();
-  //         });
-  //       }
-  //     }
-  // }
-  Future<void> fetchpublicstatus() async {
+  List<bool>publicity=[];
+  Future<void> fetchpublicity() async {
     final user = _auth.currentUser;
     await fetchplaylistid();
-    for (String ids in playlistid)
-      try {
-        DocumentSnapshot documentSnapshot = await _firestore
-            .collection(widget.UID)
-            .doc(ids)
-            .get();
-
-        if (documentSnapshot.exists) {
-          dynamic data = documentSnapshot.data();
-          if (data != null && data['Public'] is List) {
-            List<dynamic> publicList = data['Public'];
-            setState(() {
-              publicity = publicList.map((post) => post.toString()).toList();
-            });
-          }
-        }
-        print('publicity id $publicity');
-      } catch (e) {
-        print('Error fetching followers playlist: $e');
+    try{
+    List<String> uploadedUserIdsCopy = List.from(
+        playlistid); // Make a copy of the list
+    for (String vids in uploadedUserIdsCopy) {
+      final docsnap = await _firestore.collection(widget.UID)
+          .doc(vids)
+          .get();
+      if (docsnap.exists) {
+        setState(() {
+          ispublic = docsnap.data()?['Public'];
+          publicity.add(ispublic);
+        });
       }
+    }}catch(e){
+      print('publicity error $e');
+    }
+    print(' publicity users $publicity');
   }
-
   @override
   void initState() {
     // TODO: implement initState
@@ -562,12 +547,12 @@ class _SearchedUserState extends State<SearchedUser> {
     fetchthumbnail();
     fetchcoverpic();
     fetchuploaddate();
+    fetchpublicity();
     fetchcaptions();
     fetchvideo();
     fetchbio();
     fetchemail();
     fetchsubscriber();
-    fetchpublicstatus();
     fetchvideoid();
     fetchviews();
     fetchUserDataPeriodically();
@@ -844,19 +829,21 @@ class _SearchedUserState extends State<SearchedUser> {
                                     {
                                       'Views':views_video+1
                                     });
-                                // Navigator.push(
-                                //   context,
-                                //   MaterialPageRoute(
-                                //     builder: (context) => User_video(
-                                //       thumbnail: thumbnail[i],
-                                //       views: views[i],
-                                //       caption: captions[i],
-                                //       viddeourl: videos[i],
-                                //       uploaddate: uploaddate[i],
-                                //       Index: i,
-                                //     ),
-                                //   ),
-                                // );
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => VideoPage(caption: captions[i],
+                                        uploaddate: uploaddate[i],
+                                        Index: i,
+                                        viddeourl: videos[i],
+                                        views: views[i],
+                                        thumbnail: thumbnails[i],
+                                        username: username,
+                                        profilepicurl: profilepicurl,
+                                        UID: widget.UID,
+                                        VideoID: videoid[i])
+                                  ),
+                                );
                                 print('index $i');
                               },
                               child: Image.network(
@@ -891,19 +878,21 @@ class _SearchedUserState extends State<SearchedUser> {
                                 {
                                   'Views':views_video+1
                                 });
-                            // Navigator.push(
-                            //   context,
-                            //   MaterialPageRoute(
-                            //     builder: (context) => User_video(
-                            //       thumbnail: thumbnail[i],
-                            //       views: views[i],
-                            //       caption: captions[i],
-                            //       viddeourl: videos[i],
-                            //       uploaddate: uploaddate[i],
-                            //       Index: i,
-                            //     ),
-                            //   ),
-                            // );
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => VideoPage(caption: captions[i],
+                                      uploaddate: uploaddate[i],
+                                      Index: i,
+                                      viddeourl: videos[i],
+                                      views: views[i],
+                                      thumbnail: thumbnails[i],
+                                      username: username,
+                                      profilepicurl: profilepicurl,
+                                      UID: widget.UID,
+                                      VideoID: videoid[i])
+                              ),
+                            );
                             print('Index $i');
                           },
                           child: Column(
@@ -1230,7 +1219,7 @@ class _SearchedUserState extends State<SearchedUser> {
                   ),
                 ],
               ):Container(),
-              isplaylist?Column(
+              publicity.isNotEmpty?isplaylist?Column(
                 children: [
                   Text('Playlist Names',style: GoogleFonts.abyssinicaSil(color: Colors.white,
                       fontWeight: FontWeight.bold,fontSize: 20
@@ -1239,52 +1228,76 @@ class _SearchedUserState extends State<SearchedUser> {
                     height: 40,
                   ),
                   for(int i=0;i<playlistid.length;i++)
-                    Column(
-                      children: [
+                    if(publicity[i])
+                      Column(
+                        children: [
                           Row(
                             children: [
                               SizedBox(
                                 width: 20,
                               ),
-                                InkWell(
-                                  onTap: (){
-                                    Navigator.push(context, MaterialPageRoute(builder: (context) =>
-                                        Playlist_Page(playlistimage: Playlistdp[i],
-                                            playlistid: playlistid[i],
-                                            userdp: profilepicurl,
-                                            ischangeable: false,
-                                            playlistname: Playlistname[i],
-                                            playlist_owner: username),));
-                                  },
-                                  child: Image.network(Playlistdp[i],
-                                    height: 150,
-                                    width: 150,
-                                  ),
+                              InkWell(
+                                onTap: (){
+                                  Navigator.push(context, MaterialPageRoute(builder: (context) =>
+                                      Playlist_Page(playlistimage: Playlistdp[i],
+                                          playlistid: playlistid[i],
+                                          userdp: profilepicurl,
+                                          ischangeable: false,
+                                          playlistname: Playlistname[i],
+                                          playlist_owner: username),));
+                                },
+                                child: Playlistdp[i].isNotEmpty?Image.network(Playlistdp[i],
+                                  height: 150,
+                                  width: 150,
+                                ):CircularProgressIndicator(
+                                  backgroundColor: Colors.white,
+                                  color: Colors.red,
                                 ),
+                              ),
                               SizedBox(
                                 width: 20,
                               ),
-                                InkWell(
-                                  onTap: (){
-                                    Navigator.push(context, MaterialPageRoute(builder: (context) =>
-                                        Playlist_Page(playlistimage: Playlistdp[i],
-                                            playlistid: playlistid[i],
-                                            playlistname: Playlistname[i],
-                                            userdp: profilepicurl,
-                                            ischangeable: true,
-                                            playlist_owner: username),));
-                                  },
-                                  child: Text('${Playlistname[i]}',style: GoogleFonts.abyssinicaSil(color: Colors.white,fontSize: 18),),
-                                ),
+                              InkWell(
+                                onTap: (){
+                                  Navigator.push(context, MaterialPageRoute(builder: (context) =>
+                                      Playlist_Page(playlistimage: Playlistdp[i],
+                                          playlistid: playlistid[i],
+                                          playlistname: Playlistname[i],
+                                          userdp: profilepicurl,
+                                          ischangeable: true,
+                                          playlist_owner: username),));
+                                },
+                                child: Text('${Playlistname[i]}',style: GoogleFonts.abyssinicaSil(color: Colors.white,fontSize: 18),),
+                              ),
                             ],
                           ),
-                        SizedBox(
-                          height: 50,
+                          SizedBox(
+                            height: 30,
+                          ),
+                        ],
+                      )
+                ],
+              ):Container():Column(
+                children: [
+                  SizedBox(height: 50,),
+                  Center(
+                    child: AnimatedStackCircularProgressBar(
+                      size: 50,
+                      progressStrokeWidth: 15,
+                      backStrokeWidth: 15,
+                      startAngle: 0,
+                      backColor: const Color(0xffD7DEE7),
+                      bars: [
+                        AnimatedBarValue(
+                          barColor: Colors.red,
+                          barValues: 100,
+                          fullProgressColors: Colors.red,
                         ),
                       ],
-                    )
+                    ),
+                  ),
                 ],
-              ):Container(),
+              ),
               SizedBox(
                 height: 50,
               ),

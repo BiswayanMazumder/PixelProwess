@@ -61,6 +61,7 @@ dependencies:
   overflow_text_animated: ^0.0.6
   flutter_animate: ^4.5.0
   typing_animation: ^0.0.1
+  circular_progress_stack: ^0.0.3
 
 dev_dependencies:
   flutter_test:
