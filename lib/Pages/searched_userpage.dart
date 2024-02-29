@@ -1264,7 +1264,7 @@ class _SearchedUserState extends State<SearchedUser> {
                                           playlistid: playlistid[i],
                                           playlistname: Playlistname[i],
                                           userdp: profilepicurl,
-                                          ischangeable: true,
+                                          ischangeable: false,
                                           playlist_owner: username),));
                                 },
                                 child: Text('${Playlistname[i]}',style: GoogleFonts.abyssinicaSil(color: Colors.white,fontSize: 18),),

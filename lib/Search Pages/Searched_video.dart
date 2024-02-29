@@ -247,6 +247,23 @@ class _Searched_videoState extends State<Searched_video> {
     },SetOptions(merge: true));
   }
   double _sliderValue = 0.0; // Current value of the slider
+  bool isprivate=false;
+  Future<void> fetchisprivate() async {
+    await fetchuid();
+    final user = _auth.currentUser;
+    try {
+      final docsnap=await _firestore.collection('User Details').doc(UID).get();
+      if(docsnap.exists){
+        setState(() {
+          isprivate=docsnap.data()?['channel private'];
+        });
+      }
+    } catch (e) {
+      print('Error fetching followers privacy: $e');
+    }
+    print('widget.uids $UID');
+    print('is private searched $isprivate');
+  }
   Duration _duration = Duration();
   void fetchUserDataPeriodically() {
     // Fetch data initially
@@ -264,17 +281,49 @@ class _Searched_videoState extends State<Searched_video> {
     await fetchviews();
     await fetchuploaddate();
   }
-  @override
+  bool issaved=false;
+  List<String> videourls=[];
+  Future<void> fetchvideourls() async {
+    await fetchvideourl();
+    final user = _auth.currentUser;
+    try {
+      DocumentSnapshot documentSnapshot = await _firestore
+          .collection('Users Saved Videos')
+          .doc(user!.uid)
+          .get();
+
+      if (documentSnapshot.exists) {
+        dynamic data = documentSnapshot.data();
+        if (data != null) {
+          List<dynamic> posts = (data['Saved Video Details'] as List?) ?? [];
+          setState(() {
+            videourls =posts.map((post) => post['Video Link'].toString()).toList();
+          });
+        }
+      }
+      if(videourls.contains(videourl)){
+        setState(() {
+          issaved=true;
+        });
+      }
+      print('saved search $videourls');
+      print('saved video searched $issaved');
+    } catch (e) {
+      print('Error fetching followers videos: $e');
+    }
+  }
   @override
   void initState() {
     super.initState();
     fetchthumbnail();
+    fetchisprivate();
     fetchUserDataPeriodically();
     fetchdislikedusers();
     fetchprofilepictures();
     fetchlikedusers();
     fetchcaption();
     fetchviews();
+    fetchvideourls();
     fetchuploaddate();
     fetchuid();
     fetchsubscriber();
@@ -531,10 +580,14 @@ class _Searched_videoState extends State<Searched_video> {
                       child: Text(username,style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,
                           fontSize: 12),),
                     ),
-                    if(subscriber.length<=1)
-                      Text('${subscriber.length} Subscriber',style: TextStyle(color: Colors.grey,fontSize: 12,fontWeight: FontWeight.bold),),
-                    if(subscriber.length>1)
-                      Text('${subscriber.length} Subscribers',style: TextStyle(color: Colors.grey,fontSize: 12,fontWeight: FontWeight.bold),),
+                    isprivate?Container():Column(
+                      children: [
+                        if(subscriber.length<=1)
+                          Text('${subscriber.length} Subscriber',style: TextStyle(color: Colors.grey,fontSize: 12,fontWeight: FontWeight.bold),),
+                        if(subscriber.length>1)
+                          Text('${subscriber.length} Subscribers',style: TextStyle(color: Colors.grey,fontSize: 12,fontWeight: FontWeight.bold),),
+                      ],
+                    )
                   ],
                 ),
                 SizedBox(
@@ -575,55 +628,108 @@ class _Searched_videoState extends State<Searched_video> {
             SizedBox(
               height: 50,
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                if(isliked)
-                  IconButton(onPressed: ()async{
-                    final user=_auth.currentUser;
-                    await _firestore.collection('Liked Videos').doc(widget.UIDs).set({
-                      'UIDs':FieldValue.arrayRemove([
-                        user!.uid
-                      ])
-                    });
-                    fetchlikedusers();
-                  }, icon: Icon(CupertinoIcons.hand_thumbsup_fill,color: Colors.white,)),
-                if(!isliked)
-                  IconButton(onPressed: ()async{
-                    final user=_auth.currentUser;
-                    await _firestore.collection('Disliked Videos').doc(widget.UIDs).set({
-                      'UIDs':FieldValue.arrayRemove([
-                        user!.uid
-                      ])
-                    });
-                    Likeduser();
-                    fetchlikedusers();
-                  }, icon: Icon(CupertinoIcons.hand_thumbsup,color: Colors.white,)),
-                SizedBox(
-                  width: 50,
-                ),
-                if(isdisliked)
-                  IconButton(onPressed: ()async{
-                    final user=_auth.currentUser;
-                    await _firestore.collection('Disliked Videos').doc(widget.UIDs).set({
-                      'UIDs':FieldValue.arrayRemove([
-                        user!.uid
-                      ])
-                    });
-                    fetchdislikedusers();
-                  }, icon: Icon(CupertinoIcons.hand_thumbsdown_fill,color: Colors.white,)),
-                if(!isdisliked)
-                  IconButton(onPressed: ()async{
-                    dislikeduser();
-                    final user=_auth.currentUser;
-                    await _firestore.collection('Liked Videos').doc(widget.UIDs).set({
-                      'UIDs':FieldValue.arrayRemove([
-                        user!.uid
-                      ])
-                    });
-                    fetchlikedusers();
-                  }, icon: Icon(CupertinoIcons.hand_thumbsdown,color: Colors.white,)),
-              ],
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.rectangle, // Use BoxShape.rectangle for an oval-like shape
+                      borderRadius: BorderRadius.circular(50), // Adjust the border radius to get the desired oval shape
+                      color: Colors.grey[900], // Optional: set the background color
+                    ),
+                    width: 200,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        if(isliked)
+                          IconButton(onPressed: ()async{
+                            final user=_auth.currentUser;
+                            await _firestore.collection('Liked Videos').doc(widget.UIDs).set({
+                              'UIDs':FieldValue.arrayRemove([
+                                user!.uid
+                              ])
+                            });
+                            fetchlikedusers();
+                          }, icon: Icon(CupertinoIcons.hand_thumbsup_fill,color: Colors.white,)),
+                        if(!isliked)
+                          IconButton(onPressed: ()async{
+                            final user=_auth.currentUser;
+                            await _firestore.collection('Disliked Videos').doc(widget.UIDs).set({
+                              'UIDs':FieldValue.arrayRemove([
+                                user!.uid
+                              ])
+                            });
+                            Likeduser();
+                            fetchlikedusers();
+                          }, icon: Icon(CupertinoIcons.hand_thumbsup,color: Colors.white,)),
+                        Text('${likedusers.length}',style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold),),
+                        SizedBox(
+                          width: 50,
+                        ),
+                        if(isdisliked)
+                          IconButton(onPressed: ()async{
+                            final user=_auth.currentUser;
+                            await _firestore.collection('Disliked Videos').doc(widget.UIDs).set({
+                              'UIDs':FieldValue.arrayRemove([
+                                user!.uid
+                              ])
+                            });
+                            fetchdislikedusers();
+                          }, icon: Icon(CupertinoIcons.hand_thumbsdown_fill,color: Colors.white,)),
+                        if(!isdisliked)
+                          IconButton(onPressed: ()async{
+                            dislikeduser();
+                            final user=_auth.currentUser;
+                            await _firestore.collection('Liked Videos').doc(widget.UIDs).set({
+                              'UIDs':FieldValue.arrayRemove([
+                                user!.uid
+                              ])
+                            });
+                            fetchlikedusers();
+                          }, icon: Icon(CupertinoIcons.hand_thumbsdown,color: Colors.white,)),
+                        Text('${dislikedusers.length}',style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold),),
+
+                      ],
+                    ),
+                  ),
+                  if(!issaved)
+                    IconButton(onPressed: ()async{
+                      await _firestore.collection('Users Saved Videos').doc(user!.uid).set(
+                          {
+                            'Saved Video Details':FieldValue.arrayUnion([
+                              {
+                                'Thumbnail': thumbnail,
+                                'Video Link':videourl,
+                                'User ID':UID,
+                                'Profile Picture':profileurl,
+                                'Username':username,
+                                'Video ID':widget.UIDs,
+                              }
+                            ])
+                          },SetOptions(merge: true));
+                    }, icon: Icon(Icons.watch_later,color: Colors.white,)),
+                  if(issaved)
+                    IconButton(onPressed: ()async{
+                      await _firestore.collection('Users Saved Videos').doc(user!.uid).update(
+                          {
+                            'Saved Video Details':FieldValue.arrayRemove([
+                              {
+                                'Thumbnail': thumbnail,
+                                'Video Link':videourl,
+                                'User ID':UID,
+                                'Profile Picture':profileurl,
+                                'Username':username,
+                                'Video ID':widget.UIDs,
+                              }
+                            ])
+                          });
+                      setState(() {
+                        issaved=false;
+                      });
+                    }, icon: Icon(Icons.delete_rounded,color: Colors.red,)),
+                ],
+              ),
             ),
           ],
         ),

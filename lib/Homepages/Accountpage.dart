@@ -12,6 +12,7 @@ import 'package:pixelprowess/Playlists/playlist_homepage.dart';
 import 'package:pixelprowess/Saved_videos/Watch_later.dart';
 import 'package:pixelprowess/Video%20Card/VideoCard.dart';
 import 'package:pixelprowess/main.dart';
+import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'package:shimmer_image/shimmer_image.dart';
 import 'package:timeago/timeago.dart'as timeago;
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -284,6 +285,7 @@ class _AccountpageState extends State<Accountpage> {
   DateTime communityUploaddate = DateTime.now();
   Future<void> fetchData() async {
     await fetchusername();
+    await fetchpremiumsubs();
     await fetchprofilepic();
     await fetchcoverpic();
     await fetchbio();
@@ -501,13 +503,32 @@ class _AccountpageState extends State<Accountpage> {
     }
     print('playlist name $Playlistname');
   }
+  bool ispremiumuser=false;
+  Future<void>writepremiumuser()async{
+    final user=_auth.currentUser;
+    await _firestore.collection('Premium Users').doc(user!.uid).set(
+        {
+          'Premium User': true
+        });
 
+  }
+  Future<void>fetchpremiumsubs() async{
+    final user=_auth.currentUser;
+    final docsnap=await _firestore.collection('Premium Users').doc(user!.uid).get();
+    if(docsnap.exists){
+      setState(() {
+        ispremiumuser=docsnap.data()?['Premium User'];
+      });
+    }
+    print('is premium $ispremiumuser');
+  }
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     fetchIPAddress();
     fetchusername();
+    fetchpremiumsubs();
     fetchplaylistname();
     fetchCommunityUploadDate();
     fetchVideoLengths();
@@ -1225,115 +1246,77 @@ class _AccountpageState extends State<Accountpage> {
                 Row(
                   children: [
                     Spacer(),
-                    InkWell(
-                      onTap: (){
-                        Navigator.push(context, MaterialPageRoute(builder: (context) => Playlist_creation(),));
-                       // showDialog(context: context, builder: (context) {
-                       //   return AlertDialog(
-                       //     backgroundColor: Colors.black,
-                       //     title: Center(child: Text('Playlist Details',style: GoogleFonts.abyssinicaSil(color: Colors.white,
-                       //     fontSize:20,fontWeight: FontWeight.bold
-                       //     ),)),
-                       //     actions: [
-                       //       Column(
-                       //         crossAxisAlignment: CrossAxisAlignment.center,
-                       //         children: [
-                       //           SizedBox(
-                       //             height: 10,
-                       //           ),
-                       //           Center(child: Text('Playlist Name',style: GoogleFonts.abyssinicaSil(color: Colors.white,
-                       //               fontSize:15
-                       //           ),)),
-                       //           Padding(
-                       //             padding: const EdgeInsets.all(20.0),
-                       //             child: TextField(
-                       //               controller: _playlistController,
-                       //               decoration: InputDecoration(
-                       //                 hintText: 'Playlist Name',
-                       //                 fillColor: Colors.grey,
-                       //                 filled: true
-                       //               ),
-                       //             ),
-                       //           ),
-                       //           SizedBox(
-                       //             height: 20,
-                       //           ),
-                       //           Center(child: Text('Playlist Image',style: GoogleFonts.abyssinicaSil(color: Colors.white,
-                       //               fontSize:15
-                       //           ),)),
-                       //           SizedBox(
-                       //             height: 20,
-                       //           ),
-                       //           DottedBorder(
-                       //               borderType: BorderType.RRect,
-                       //               radius: Radius.circular(8),
-                       //               color: Colors.white,
-                       //               dashPattern: [10,4],
-                       //               strokeCap: StrokeCap.round,
-                       //               child: Container(
-                       //                 width: double.infinity,
-                       //                 height: 200,
-                       //                 color:Colors.grey.withOpacity(0.3),
-                       //                 child: _upload
-                       //                     ? IconButton(
-                       //                   onPressed: _pickImage,
-                       //                   icon: Icon(Icons.upload, color: CupertinoColors.white),
-                       //                 )
-                       //                     : _image != null
-                       //                     ? Container(
-                       //                   width: double.infinity,
-                       //                   height: 200,
-                       //                   decoration: BoxDecoration(
-                       //                     shape: BoxShape.rectangle,
-                       //                     image: DecorationImage(
-                       //                       image: FileImage(_image!),
-                       //                       fit: BoxFit.fitWidth,
-                       //                     ),
-                       //                   ),
-                       //                   child: IconButton(
-                       //                     onPressed: () {
-                       //                       setState(() {
-                       //                         _upload = true;
-                       //                         _image = null;
-                       //                       });
-                       //                     },
-                       //                     icon: Icon(CupertinoIcons.clear,
-                       //                         color: Colors.black),
-                       //                   ),
-                       //                 )
-                       //                     : Container(),
-                       //               )
-                       //           ),
-                       //           SizedBox(
-                       //             height: 20,
-                       //           ),
-                       //           ElevatedButton(onPressed: ()async{
-                       //             final user=_auth.currentUser;
-                       //             if(_playlistController.text.isNotEmpty && _image!=null)
-                       //               await generateUniqueRandomNumber();
-                       //             Navigator.pop(context);
-                       //             _playlistController.clear();
-                       //           },
-                       //               child: Text('Create',style: TextStyle(color: Colors.black),),
-                       //           style: ButtonStyle(backgroundColor: MaterialStatePropertyAll(Colors.green)),
-                       //           )
-                       //         ],
-                       //       )
-                       //     ],
-                       //     scrollable: true,
-                       //   );
-                       // },) ;
-                      },
-                      child: Row(
-                        children: [
-                          Text('Create Playlist  ',style: GoogleFonts.abyssinicaSil(color: Colors.white,fontWeight: FontWeight.bold),),
-                        Icon(Icons.playlist_add,color: Colors.white,),
-                          SizedBox(
-                            width: 10,
-                          )
-                        ],
+                    if(playlistid.length>=1 && ispremiumuser==false)
+                      Container(),
+                    if(playlistid.length>=1 && ispremiumuser==false)
+                      InkWell(
+                        onTap: (){
+                          Razorpay razorpay = Razorpay();
+                          var options = {
+                            'key': 'rzp_test_WoKAUdpbPOQlXA',
+                            'amount': 120000, // amount in the smallest currency unit
+                            'timeout': 300,
+                            'name': 'FotoFusion',
+                            'description': 'Subscription For NetFly.Only for two screens',
+                            'theme': {
+                              'color': '#FF0000',
+                            },
+                          };
+
+                          razorpay.open(options);
+                          razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, (PaymentSuccessResponse response) async{
+                            print('Payment Success');
+                            final user = _auth.currentUser;
+                            await _firestore.collection('Premium Users').doc(user!.uid).set(
+                              {
+                                'Premium User': true
+                              },
+                              SetOptions(merge: true),
+                            );
+
+                          }
+                          );
+                        },
+                        child: Row(
+                          children: [
+                            Text('Create Playlist  ',style: GoogleFonts.abyssinicaSil(color: Colors.white,fontWeight: FontWeight.bold),),
+                            Icon(Icons.playlist_add,color: Colors.white,),
+                            SizedBox(
+                              width: 10,
+                            )
+                          ],
+                        ),
                       ),
-                    )
+                    if(playlistid.length>1 && ispremiumuser)
+                      InkWell(
+                        onTap: (){
+                          Navigator.push(context, MaterialPageRoute(builder: (context) => Playlist_creation(),));
+                        },
+                        child: Row(
+                          children: [
+                            Text('Create Playlist  ',style: GoogleFonts.abyssinicaSil(color: Colors.white,fontWeight: FontWeight.bold),),
+                            Icon(Icons.playlist_add,color: Colors.white,),
+                            SizedBox(
+                              width: 10,
+                            )
+                          ],
+                        ),
+                      ),
+                    if(playlistid.length<1 || ispremiumuser)
+                      InkWell(
+                        onTap: (){
+                          Navigator.push(context, MaterialPageRoute(builder: (context) => Playlist_creation(),));
+                        },
+                        child: Row(
+                          children: [
+                            Text('Create Playlist  ',style: GoogleFonts.abyssinicaSil(color: Colors.white,fontWeight: FontWeight.bold),),
+                            Icon(Icons.playlist_add,color: Colors.white,),
+                            SizedBox(
+                              width: 10,
+                            )
+                          ],
+                        ),
+                      )
                   ],
                 ),
                 SizedBox(

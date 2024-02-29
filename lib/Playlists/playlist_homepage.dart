@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'dart:ui';
 import 'package:timeago/timeago.dart'as timeago;
 import 'package:google_fonts/google_fonts.dart';
@@ -29,7 +30,7 @@ class Playlist_Page extends StatefulWidget {
 
 class _Playlist_PageState extends State<Playlist_Page> {
   bool ispublic=true;
-  String bio='Please set your bio';
+  String bio='No bio yet';
   FirebaseAuth _auth=FirebaseAuth.instance;
   FirebaseFirestore _firestore=FirebaseFirestore.instance;
   Future<void> fetchpublicstatus()async{
@@ -382,7 +383,7 @@ class _Playlist_PageState extends State<Playlist_Page> {
                           ],
                         ),
                         SizedBox(
-                          height: 20,
+                          height: 50,
                         ),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -453,7 +454,7 @@ class _Playlist_PageState extends State<Playlist_Page> {
                                   },);
                                 }, icon: Icon(Icons.edit,color: Colors.white,)),
                               ),
-                            CircleAvatar(
+                            videoid.isNotEmpty?CircleAvatar(
                               backgroundColor: Colors.white,
                               child: IconButton(onPressed: (){
                                 Navigator.push(context, MaterialPageRoute(builder: (context) => VideoPage(
@@ -468,11 +469,11 @@ class _Playlist_PageState extends State<Playlist_Page> {
                                     UID: uploadeduseruid[0],
                                     VideoID: videoid[0]),));
                               }, icon: Icon(Icons.play_arrow,color: Colors.black,)),
-                            ),
+                            ):Container(),
                             CircleAvatar(
                               backgroundColor: Colors.black,
                               child: IconButton(onPressed: (){
-                                Clipboard.setData(ClipboardData(text: 'www.pixelprowess.com/playlist/${widget.playlistid}/share=${widget.ischangeable}'));
+                                Clipboard.setData(ClipboardData(text: 'www.pixelprowess.com/playlist/${widget.playlistid}/owner=${widget.ischangeable}'));
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(content: Center(child: Text('Copied Successfully')),
                                     backgroundColor: Colors.green,
@@ -498,7 +499,33 @@ class _Playlist_PageState extends State<Playlist_Page> {
                                           child: Column(
                                             children: [
                                               InkWell(
-                                                onTap:(){},
+                                                onTap:(){
+                                                  Razorpay razorpay = Razorpay();
+                                                  var options = {
+                                                    'key': 'rzp_test_WoKAUdpbPOQlXA',
+                                                    'amount': 120000, // amount in the smallest currency unit
+                                                    'timeout': 300,
+                                                    'name': 'FotoFusion',
+                                                    'description': 'Subscription For NetFly.Only for two screens',
+                                                    'theme': {
+                                                      'color': '#FF0000',
+                                                    },
+                                                  };
+
+                                                  razorpay.open(options);
+                                                  razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, (PaymentSuccessResponse response) async{
+                                                    print('Payment Success');
+                                                    final user = _auth.currentUser;
+                                                    await _firestore.collection('Subscription').doc(user!.uid).set(
+                                                      {
+                                                        'SubscribedUserid': FieldValue.arrayUnion([user!.uid])
+                                                      },
+                                                      SetOptions(merge: true),
+                                                    );
+
+                                                  }
+                                                  );
+                                                },
                                                 child: Text('Edit Playlist Cover Image',style: GoogleFonts.abyssinicaSil(
                                                     color: Colors.white,fontSize: 15
                                                 ),),
