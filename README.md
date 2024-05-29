@@ -10,4 +10,4 @@ PixelProwess isn't just a platform for passive consumption—it's a vibrant comm
 
 Accessibility is paramount to us at PixelProwess, which is why our app offers a range of customizable options to accommodate diverse user needs. Whether it's adjustable playback speeds, subtitle support, or multilingual interfaces, PixelProwess ensures that every user can enjoy a seamless and inclusive viewing experience.
 
-With its unparalleled performance, personalized recommendations, robust social features, and commitment to accessibility, PixelProwess sets the standard for modern video streaming platforms. Join us on a journey of discovery and delight with PixelProwess—the ultimate destination for digital entertainment.
+With its unparalleled performance, personalized recommendations, robust social features, and commitment to accessibility, PixelProwess sets the standard for modern video streaming platforms. Join us on a journey of discovery and delight with PixelProwess—the ultimate destination for digital entertainment....
